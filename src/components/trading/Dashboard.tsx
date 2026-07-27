@@ -194,6 +194,7 @@ export function Dashboard() {
 
 
       {/* Bottom Nav */}
+      {nav !== "Trade" && (
       <nav className="fixed bottom-0 left-0 right-0 w-full z-50 pb-0 pt-0">
         <div className="border-t border-border/60 bg-surface/98 backdrop-blur-lg shadow-[0_-8px_32px_rgba(0,0,0,0.45)] grid grid-cols-5">
           {(
@@ -215,6 +216,8 @@ export function Dashboard() {
           ))}
         </div>
       </nav>
+      )}
+
 
       <SecretConfig open={configOpen} onClose={() => setConfigOpen(false)} />
       <Toaster position="top-center" theme="dark" />
