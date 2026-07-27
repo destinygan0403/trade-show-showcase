@@ -16,9 +16,13 @@ import {
   CandlestickChart,
   Clock,
   Settings as SettingsIcon,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatNumber, useTradingState } from "@/lib/trading-store";
+import { useTheme, setTheme } from "@/lib/theme";
+
 
 
 /* -------------------- TRADE (MT5-style) -------------------- */
