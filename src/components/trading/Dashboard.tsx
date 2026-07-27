@@ -320,10 +320,7 @@ function PositionRow({
   const positive = pl >= 0;
   const sideColor = side === "Sell" ? "var(--color-loss)" : "var(--color-profit)";
   return (
-    <button
-      className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl border border-border/60 px-4 py-3 active:scale-[0.99] transition"
-      style={{ background: "linear-gradient(135deg, oklch(0.26 0.07 255), oklch(0.18 0.05 255))" }}
-    >
+    <button className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-5 py-3 border-b border-border/60 bg-surface/30 active:scale-[0.99] transition">
       <div className="min-w-0">
         <div className="text-sm font-semibold text-white">{symbol}</div>
         <div className="mt-0.5 text-xs truncate">
