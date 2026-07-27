@@ -146,8 +146,8 @@ export function Dashboard() {
 
       {/* Positions */}
       {nav === "Accounts" && tab === "Open" ? (
-        <section className="px-5 mt-4">
-          <div className="flex items-center justify-between px-1 pb-2">
+        <section className="mt-4">
+          <div className="flex items-center justify-between px-5 pb-2">
             <span className="text-xs text-muted-foreground">Total P/L:</span>
             <button
               onClick={() => action("Trier")}
@@ -158,7 +158,7 @@ export function Dashboard() {
             </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="border-t border-border/60">
             <SymbolSummary
               symbol="XAU/USD"
               count={s.positions.length}
@@ -278,10 +278,7 @@ function SymbolSummary({
 }) {
   const positive = totalPL >= 0;
   return (
-    <div
-      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/60 px-4 py-3"
-      style={{ background: "linear-gradient(135deg, oklch(0.28 0.08 255), oklch(0.2 0.06 255))" }}
-    >
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 border-b border-border/60 bg-surface/30">
       <div className="flex items-center gap-3 min-w-0">
         <XauLogo />
         <div className="flex items-center gap-2 min-w-0">
@@ -323,10 +320,7 @@ function PositionRow({
   const positive = pl >= 0;
   const sideColor = side === "Sell" ? "var(--color-loss)" : "var(--color-profit)";
   return (
-    <button
-      className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl border border-border/60 px-4 py-3 active:scale-[0.99] transition"
-      style={{ background: "linear-gradient(135deg, oklch(0.26 0.07 255), oklch(0.18 0.05 255))" }}
-    >
+    <button className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-5 py-3 border-b border-border/60 bg-surface/30 active:scale-[0.99] transition">
       <div className="min-w-0">
         <div className="text-sm font-semibold text-white">{symbol}</div>
         <div className="mt-0.5 text-xs truncate">
