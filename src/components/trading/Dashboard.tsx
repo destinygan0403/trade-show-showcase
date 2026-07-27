@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   User,
@@ -12,7 +12,7 @@ import {
   LineChart,
   UserCircle2,
 } from "lucide-react";
-import { formatMoney, formatNumber, useTradingState } from "@/lib/trading-store";
+import { formatMoney, formatNumber, startLiveTicker, useTradingState } from "@/lib/trading-store";
 import { SecretConfig } from "./SecretConfig";
 
 export function Dashboard() {
