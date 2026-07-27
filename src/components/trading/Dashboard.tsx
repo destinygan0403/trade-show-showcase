@@ -355,28 +355,23 @@ function PositionRow({
 
 function XauLogo() {
   return (
-    <div
-      className="h-8 w-8 shrink-0 rounded-full grid place-items-center overflow-hidden"
-      style={{ background: "radial-gradient(circle at 30% 30%, oklch(0.35 0.1 255), oklch(0.18 0.07 255))" }}
-    >
-      <svg viewBox="0 0 32 32" className="h-6 w-6" aria-hidden>
+    <div className="h-8 w-8 shrink-0 rounded-full grid place-items-center overflow-hidden bg-white">
+      <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
         <defs>
-          <radialGradient id="xauGold" cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#ffe89a" />
-            <stop offset="55%" stopColor="#f2b23a" />
-            <stop offset="100%" stopColor="#8a5a12" />
-          </radialGradient>
+          <linearGradient id="xauBlue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6ea8ff" />
+            <stop offset="100%" stopColor="#2f6fe0" />
+          </linearGradient>
+          <linearGradient id="xauBlueDark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2a5fcf" />
+            <stop offset="100%" stopColor="#173a8a" />
+          </linearGradient>
         </defs>
-        <circle cx="16" cy="16" r="11" fill="url(#xauGold)" />
-        <circle cx="12.5" cy="12" r="2.6" fill="#fff6d5" opacity="0.85" />
-        <path
-          d="M11 20 Q16 15 21 20"
-          stroke="#5a3a08"
-          strokeWidth="1.2"
-          fill="none"
-          strokeLinecap="round"
-          opacity="0.6"
-        />
+        <circle cx="16" cy="16" r="15" fill="#ffffff" />
+        <circle cx="20" cy="14" r="8" fill="url(#xauBlueDark)" />
+        <circle cx="12" cy="18" r="8" fill="url(#xauBlue)" />
+        <ellipse cx="10" cy="15" rx="3" ry="1.4" fill="#ffffff" opacity="0.35" />
+        <ellipse cx="18" cy="11.5" rx="2.4" ry="1.1" fill="#ffffff" opacity="0.25" />
       </svg>
     </div>
   );
