@@ -77,15 +77,6 @@ export function TradeView({ onNavigate }: { onNavigate?: (key: "Accounts" | "Tra
           />
         ))}
       </div>
-
-      {/* MT5-style bottom tab bar */}
-      <div className="border-t border-border/60 bg-surface/95 backdrop-blur-md grid grid-cols-5">
-        <MtTab icon={<ArrowUpDown size={20} />} label="Quotes" onClick={() => onNavigate?.("Accounts")} />
-        <MtTab icon={<CandlestickChart size={20} />} label="Chart" onClick={() => onNavigate?.("Performance")} />
-        <MtTab icon={<BarsIcon />} label="Trade" active />
-        <MtTab icon={<Clock size={20} />} label="History" onClick={() => toast("Historique")} />
-        <MtTab icon={<SettingsIcon size={20} />} label="Settings" onClick={() => onNavigate?.("Profile")} />
-      </div>
     </section>
   );
 }
