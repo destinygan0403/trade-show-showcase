@@ -358,20 +358,58 @@ function XauLogo() {
     <div className="h-8 w-8 shrink-0 rounded-full grid place-items-center overflow-hidden bg-white">
       <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
         <defs>
-          <linearGradient id="xauBlue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6ea8ff" />
-            <stop offset="100%" stopColor="#2f6fe0" />
-          </linearGradient>
-          <linearGradient id="xauBlueDark" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2a5fcf" />
-            <stop offset="100%" stopColor="#173a8a" />
+          <clipPath id="flagClip">
+            <circle cx="16" cy="16" r="15" />
+          </clipPath>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FFD700" />
+            <stop offset="100%" stopColor="#DAA520" />
           </linearGradient>
         </defs>
-        <circle cx="16" cy="16" r="15" fill="#ffffff" />
-        <circle cx="20" cy="14" r="8" fill="url(#xauBlueDark)" />
-        <circle cx="12" cy="18" r="8" fill="url(#xauBlue)" />
-        <ellipse cx="10" cy="15" rx="3" ry="1.4" fill="#ffffff" opacity="0.35" />
-        <ellipse cx="18" cy="11.5" rx="2.4" ry="1.1" fill="#ffffff" opacity="0.25" />
+
+        {/* US flag background */}
+        <g clipPath="url(#flagClip)">
+          <rect x="0" y="0" width="32" height="32" fill="#ffffff" />
+          {/* Stripes */}
+          <rect x="0" y="0" width="32" height="4.5" fill="#B22234" />
+          <rect x="0" y="4.5" width="32" height="4" fill="#ffffff" />
+          <rect x="0" y="8.5" width="32" height="4" fill="#B22234" />
+          <rect x="0" y="12.5" width="32" height="4" fill="#ffffff" />
+          <rect x="0" y="16.5" width="32" height="4" fill="#B22234" />
+          <rect x="0" y="20.5" width="32" height="4" fill="#ffffff" />
+          <rect x="0" y="24.5" width="32" height="4" fill="#B22234" />
+          <rect x="0" y="28.5" width="32" height="3.5" fill="#ffffff" />
+          {/* Blue canton */}
+          <rect x="0" y="0" width="14" height="16" fill="#3C3B6E" />
+          {/* Stars (simplified as small white dots in a grid) */}
+          <g fill="#ffffff">
+            <circle cx="2.5" cy="1.8" r="0.6" />
+            <circle cx="5.5" cy="1.8" r="0.6" />
+            <circle cx="8.5" cy="1.8" r="0.6" />
+            <circle cx="11.5" cy="1.8" r="0.6" />
+            <circle cx="4" cy="4.2" r="0.6" />
+            <circle cx="7" cy="4.2" r="0.6" />
+            <circle cx="10" cy="4.2" r="0.6" />
+            <circle cx="2.5" cy="6.6" r="0.6" />
+            <circle cx="5.5" cy="6.6" r="0.6" />
+            <circle cx="8.5" cy="6.6" r="0.6" />
+            <circle cx="11.5" cy="6.6" r="0.6" />
+            <circle cx="4" cy="9" r="0.6" />
+            <circle cx="7" cy="9" r="0.6" />
+            <circle cx="10" cy="9" r="0.6" />
+            <circle cx="2.5" cy="11.4" r="0.6" />
+            <circle cx="5.5" cy="11.4" r="0.6" />
+            <circle cx="8.5" cy="11.4" r="0.6" />
+            <circle cx="11.5" cy="11.4" r="0.6" />
+          </g>
+        </g>
+
+        {/* Gold circle foreground with gold bars in pyramid */}
+        <circle cx="20" cy="20" r="10" fill="url(#goldGrad)" stroke="#B8860B" strokeWidth="0.6" />
+        {/* Three gold bars (squares) arranged in pyramid */}
+        <rect x="15" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
+        <rect x="19.5" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
+        <rect x="17.25" y="18.5" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
       </svg>
     </div>
   );
