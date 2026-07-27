@@ -48,67 +48,72 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
-      {/* Header */}
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
-        <h1
-          onClick={onTitleTap}
-          className="text-3xl font-bold tracking-tight select-none cursor-default truncate"
-        >
-          Accounts
-        </h1>
-        <div className="flex items-center gap-2 shrink-0">
-          <IconBtn onClick={() => action("Notifications")}>
-            <Bell size={18} />
-            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-[var(--color-loss)]" />
-          </IconBtn>
-          <IconBtn onClick={() => action("Profil")}>
-            <User size={18} />
-          </IconBtn>
-        </div>
-      </header>
-
-      {/* Account card */}
-      <section className="px-5">
-        <div className="relative rounded-3xl border border-border/60 p-5 shadow-xl shadow-black/30 overflow-hidden"
-          style={{ background: "linear-gradient(160deg, oklch(0.28 0.09 255) 0%, oklch(0.18 0.07 255) 55%, oklch(0.14 0.05 255) 100%)" }}
-        >
-          <button
-            onClick={() => setConfigOpen(true)}
-            className="absolute top-4 right-4 grid place-items-center h-8 w-8 rounded-full bg-white/10 border border-white/10 text-white/80 hover:bg-white/15"
-            aria-label="Settings"
-          >
-            <Settings2 size={14} />
-          </button>
-
-          <div className="min-w-0 pr-10">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="truncate font-semibold text-white/95">{s.accountName}</span>
-              <span className="text-white/50 text-xs"># {s.accountId}</span>
+      {nav !== "Performance" && (
+        <>
+          {/* Header */}
+          <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
+            <h1
+              onClick={onTitleTap}
+              className="text-3xl font-bold tracking-tight select-none cursor-default truncate"
+            >
+              Accounts
+            </h1>
+            <div className="flex items-center gap-2 shrink-0">
+              <IconBtn onClick={() => action("Notifications")}>
+                <Bell size={18} />
+                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-[var(--color-loss)]" />
+              </IconBtn>
+              <IconBtn onClick={() => action("Profil")}>
+                <User size={18} />
+              </IconBtn>
             </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <Tag>Real</Tag>
-              <Tag>MT5</Tag>
-              <Tag accent>Pro</Tag>
-            </div>
-          </div>
+          </header>
 
-          <div className="mt-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[28px] font-bold tracking-tight tabular-nums text-white">
-                {formatMoney(s.balance, s.currency).replace(` ${s.currency}`, "")}
-              </span>
-              <span className="text-sm text-white/60">{s.currency}</span>
-            </div>
-          </div>
+          {/* Account card */}
+          <section className="px-5">
+            <div className="relative rounded-3xl border border-border/60 p-5 shadow-xl shadow-black/30 overflow-hidden"
+              style={{ background: "linear-gradient(160deg, oklch(0.28 0.09 255) 0%, oklch(0.18 0.07 255) 55%, oklch(0.14 0.05 255) 100%)" }}
+            >
+              <button
+                onClick={() => setConfigOpen(true)}
+                className="absolute top-4 right-4 grid place-items-center h-8 w-8 rounded-full bg-white/10 border border-white/10 text-white/80 hover:bg-white/15"
+                aria-label="Settings"
+              >
+                <Settings2 size={14} />
+              </button>
 
-          <div className="mt-5 grid grid-cols-4 gap-2">
-            <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => action("Trade")} />
-            <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => action("Deposit")} />
-            <Action icon={<ArrowUpFromLine size={18} />} label="Withdraw" onClick={() => action("Withdraw")} />
-            <Action icon={<ArrowLeftRight size={18} />} label="Transfer" onClick={() => action("Transfer")} />
-          </div>
-        </div>
-      </section>
+              <div className="min-w-0 pr-10">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="truncate font-semibold text-white/95">{s.accountName}</span>
+                  <span className="text-white/50 text-xs"># {s.accountId}</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Tag>Real</Tag>
+                  <Tag>MT5</Tag>
+                  <Tag accent>Pro</Tag>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[28px] font-bold tracking-tight tabular-nums text-white">
+                    {formatMoney(s.balance, s.currency).replace(` ${s.currency}`, "")}
+                  </span>
+                  <span className="text-sm text-white/60">{s.currency}</span>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-4 gap-2">
+                <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => action("Trade")} />
+                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => action("Deposit")} />
+                <Action icon={<ArrowUpFromLine size={18} />} label="Withdraw" onClick={() => action("Withdraw")} />
+                <Action icon={<ArrowLeftRight size={18} />} label="Transfer" onClick={() => action("Transfer")} />
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
 
       {nav === "Accounts" && (
         <>
