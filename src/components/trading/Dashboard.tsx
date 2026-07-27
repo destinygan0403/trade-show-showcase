@@ -179,27 +179,25 @@ export function Dashboard() {
       )}
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-40">
-        <div className="mx-auto max-w-md px-3 pb-3 pt-2">
-          <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-lg shadow-xl grid grid-cols-5">
-            {(
-              [
-                { key: "Accounts", icon: <Wallet size={18} />, label: "Accounts" },
-                { key: "Trade", icon: <TrendingUp size={18} />, label: "Trade" },
-                { key: "Insights", icon: <BarChart3 size={18} />, label: "Insights" },
-                { key: "Performance", icon: <LineChart size={18} />, label: "Performance" },
-                { key: "Profile", icon: <UserCircle2 size={18} />, label: "Profile" },
-              ] as const
-            ).map((n) => (
-              <NavItem
-                key={n.key}
-                icon={n.icon}
-                label={n.label}
-                active={nav === n.key}
-                onClick={() => setNav(n.key as NavKey)}
-              />
-            ))}
-          </div>
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 px-3 pb-3 pt-2">
+        <div className="rounded-2xl border border-border/60 bg-surface/95 backdrop-blur-lg shadow-xl shadow-black/40 grid grid-cols-5">
+          {(
+            [
+              { key: "Accounts", icon: <Wallet size={18} />, label: "Accounts" },
+              { key: "Trade", icon: <TrendingUp size={18} />, label: "Trade" },
+              { key: "Insights", icon: <BarChart3 size={18} />, label: "Insights" },
+              { key: "Performance", icon: <LineChart size={18} />, label: "Performance" },
+              { key: "Profile", icon: <UserCircle2 size={18} />, label: "Profile" },
+            ] as const
+          ).map((n) => (
+            <NavItem
+              key={n.key}
+              icon={n.icon}
+              label={n.label}
+              active={nav === n.key}
+              onClick={() => setNav(n.key as NavKey)}
+            />
+          ))}
         </div>
       </nav>
 
