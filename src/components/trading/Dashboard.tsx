@@ -362,11 +362,14 @@ function XauLogo() {
             <stop offset="0%" stopColor="#FFD700" />
             <stop offset="100%" stopColor="#DAA520" />
           </linearGradient>
+          <clipPath id="flagClip">
+            <circle cx="20" cy="12" r="10" />
+          </clipPath>
         </defs>
 
-        {/* US flag in top-right corner, behind the gold emblem */}
-        <circle cx="20" cy="12" r="10" fill="#B22234" />
-        <g clipPath="circle(20,12,10)">
+        {/* US flag in top-right corner, clipped to a round circle */}
+        <g clipPath="url(#flagClip)">
+          <circle cx="20" cy="12" r="10" fill="#B22234" />
           {/* White stripes */}
           <rect x="11" y="2" width="18" height="2.8" fill="#ffffff" />
           <rect x="11" y="7.6" width="18" height="2.8" fill="#ffffff" />
@@ -387,7 +390,7 @@ function XauLogo() {
           </g>
         </g>
 
-        {/* Gold circle in bottom-left corner, overlapping on top */}
+        {/* Gold circle in bottom-left corner, same size, overlapping on top */}
         <circle cx="12" cy="20" r="10" fill="url(#goldGrad)" stroke="#B8860B" strokeWidth="0.6" />
         {/* Three gold bars (squares) arranged in pyramid */}
         <rect x="7" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
