@@ -355,7 +355,7 @@ function PositionRow({
 
 function XauLogo() {
   return (
-    <div className="h-8 w-8 shrink-0 rounded-full grid place-items-center overflow-hidden bg-white">
+    <div className="h-8 w-8 shrink-0 rounded-full grid place-items-center overflow-hidden">
       <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
         <defs>
           <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
@@ -364,14 +364,7 @@ function XauLogo() {
           </linearGradient>
         </defs>
 
-        {/* Gold circle in bottom-left corner */}
-        <circle cx="12" cy="20" r="10" fill="url(#goldGrad)" stroke="#B8860B" strokeWidth="0.6" />
-        {/* Three gold bars (squares) arranged in pyramid */}
-        <rect x="7" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
-        <rect x="11.5" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
-        <rect x="9.25" y="18.5" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
-
-        {/* US flag in top-right corner, overlapping */}
+        {/* US flag in top-right corner, behind the gold emblem */}
         <circle cx="20" cy="12" r="10" fill="#B22234" />
         <g clipPath="circle(20,12,10)">
           {/* White stripes */}
@@ -393,6 +386,13 @@ function XauLogo() {
             <circle cx="17.5" cy="7.6" r="0.55" />
           </g>
         </g>
+
+        {/* Gold circle in bottom-left corner, overlapping on top */}
+        <circle cx="12" cy="20" r="10" fill="url(#goldGrad)" stroke="#B8860B" strokeWidth="0.6" />
+        {/* Three gold bars (squares) arranged in pyramid */}
+        <rect x="7" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
+        <rect x="11.5" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
+        <rect x="9.25" y="18.5" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
       </svg>
     </div>
   );
