@@ -65,7 +65,7 @@
   --profit: oklch(0.7 0.18 155);
   --loss: oklch(0.65 0.22 25);
   --electric: oklch(0.75 0.18 240);
-  --card-gradient: linear-gradient(160deg, oklch(0.18 0.025 260) 0%, oklch(0.08 0.02 260) 100%);
+  --card-gradient: linear-gradient(160deg, oklch(0.25 0.03 260) 0%, oklch(0.14 0.025 260) 100%);
   --bg-gradient: none;
 }
 
