@@ -285,12 +285,7 @@ function SymbolSummary({
       style={{ background: "linear-gradient(135deg, oklch(0.28 0.08 255), oklch(0.2 0.06 255))" }}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div
-          className="h-8 w-8 shrink-0 rounded-full grid place-items-center text-[10px] font-bold"
-          style={{ background: "linear-gradient(135deg, oklch(0.82 0.16 85), oklch(0.65 0.15 55))", color: "#1a0f00" }}
-        >
-          Au
-        </div>
+        <XauLogo />
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-semibold truncate text-white">{symbol}</span>
           <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/10 text-white/80">
