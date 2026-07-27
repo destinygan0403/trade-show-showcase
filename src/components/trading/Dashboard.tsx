@@ -46,7 +46,7 @@ export function Dashboard() {
   const action = (label: string) => toast(`${label}`, { description: "Action indisponible en démo." });
 
   return (
-    <div className="min-h-screen mx-auto max-w-md pb-24">
+    <div className="min-h-screen mx-auto max-w-md pb-32">
       {/* Header */}
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
         <h1
