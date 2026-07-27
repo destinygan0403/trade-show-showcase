@@ -232,8 +232,6 @@ export function PerformanceView() {
 
   const last = candles[candles.length - 1];
   const prev = candles[candles.length - 2] ?? last;
-  const bid = last.c;
-  const ask = last.c + 0.00007;
   const up = last.c >= prev.c;
 
   const min = Math.min(...candles.map((c) => c.l));
@@ -254,7 +252,6 @@ export function PerformanceView() {
   const gridLines = 8;
   const ticks = Array.from({ length: gridLines + 1 }, (_, i) => yMin + (range * i) / gridLines);
 
-  const fmt = (v: number) => v.toFixed(5);
 
   return (
     <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10">
