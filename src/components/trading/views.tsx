@@ -410,6 +410,8 @@ export function PerformanceView() {
 /* -------------------- PROFILE -------------------- */
 export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
   const s = useTradingState();
+  const theme = useTheme();
+  const isLight = theme === "light";
   const rows = [
     { icon: <Shield size={16} />, label: "Security", value: "2FA enabled" },
     { icon: <Bell size={16} />, label: "Notifications", value: "On" },
@@ -418,6 +420,7 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
   ];
   return (
     <section className="px-5 mt-4 space-y-4">
+
       <div className="rounded-2xl border border-border/60 bg-surface/60 p-4 flex items-center gap-4">
         <div
           className="h-14 w-14 rounded-full grid place-items-center text-lg font-bold text-black"
