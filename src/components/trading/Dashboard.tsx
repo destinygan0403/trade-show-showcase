@@ -16,6 +16,7 @@ import {
 import { toast, Toaster } from "sonner";
 import { formatMoney, formatNumber, startLiveTicker, useTradingState } from "@/lib/trading-store";
 import { SecretConfig } from "./SecretConfig";
+import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
 
 type NavKey = "Accounts" | "Trade" | "Insights" | "Performance" | "Profile";
 
@@ -109,74 +110,83 @@ export function Dashboard() {
         </div>
       </section>
 
-      {/* Tabs */}
-      <nav className="px-5 mt-6">
-        <div className="flex items-center gap-1 border-b border-border/60">
-          {(["Open", "Pending", "Closed"] as const).map((t) => {
-            const active = tab === t;
-            const count = t === "Open" ? 173 : undefined;
-            return (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`relative py-3 px-3 text-sm font-medium transition-colors ${
-                  active ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {t}
-                {count !== undefined && (
-                  <span
-                    className={`ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                      active
-                        ? "bg-primary/20 text-primary"
-                        : "bg-surface-2/70 text-muted-foreground"
+      {nav === "Accounts" && (
+        <>
+          {/* Tabs */}
+          <nav className="px-5 mt-6">
+            <div className="flex items-center gap-1 border-b border-border/60">
+              {(["Open", "Pending", "Closed"] as const).map((t) => {
+                const active = tab === t;
+                const count = t === "Open" ? 173 : undefined;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setTab(t)}
+                    className={`relative py-3 px-3 text-sm font-medium transition-colors ${
+                      active ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
-                    {count}
-                  </span>
-                )}
-                {active && (
-                  <span className="absolute left-2 right-2 -bottom-px h-0.5 rounded-full bg-primary" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+                    {t}
+                    {count !== undefined && (
+                      <span
+                        className={`ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                          active
+                            ? "bg-primary/20 text-primary"
+                            : "bg-surface-2/70 text-muted-foreground"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                    {active && (
+                      <span className="absolute left-2 right-2 -bottom-px h-0.5 rounded-full bg-primary" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
 
-      {/* Positions */}
-      {nav === "Accounts" && tab === "Open" ? (
-        <section className="mt-4">
-          <div className="flex items-center justify-between px-5 pb-2">
-            <span className="text-xs text-muted-foreground">Total P/L:</span>
-            <button
-              onClick={() => action("Trier")}
-              className="text-muted-foreground p-1 rounded-md hover:bg-surface-2/60"
-              aria-label="Sort"
-            >
-              <ArrowUpDown size={14} />
-            </button>
-          </div>
+          {tab === "Open" ? (
+            <section className="mt-4">
+              <div className="flex items-center justify-between px-5 pb-2">
+                <span className="text-xs text-muted-foreground">Total P/L:</span>
+                <button
+                  onClick={() => action("Trier")}
+                  className="text-muted-foreground p-1 rounded-md hover:bg-surface-2/60"
+                  aria-label="Sort"
+                >
+                  <ArrowUpDown size={14} />
+                </button>
+              </div>
 
-          <div className="border-t border-border/60">
-            <SymbolSummary
-              symbol="XAU/USD"
-              count={s.positions.length}
-              totalPL={s.positions.reduce((a, p) => a + p.pl, 0)}
-              currency={s.currency}
-            />
-            {s.positions.map((p) => (
-              <PositionRow key={p.id} {...p} currency={s.currency} />
-            ))}
-          </div>
-        </section>
-      ) : (
-        <section className="px-5 mt-4">
-          <div className="rounded-2xl bg-surface/60 border border-border/60 p-10 text-center text-sm text-muted-foreground">
-            {nav !== "Accounts" ? `${nav} — bientôt disponible` : `Aucune position ${tab.toLowerCase()}`}
-          </div>
-        </section>
+              <div className="border-t border-border/60">
+                <SymbolSummary
+                  symbol="XAU/USD"
+                  count={s.positions.length}
+                  totalPL={s.positions.reduce((a, p) => a + p.pl, 0)}
+                  currency={s.currency}
+                />
+                {s.positions.map((p) => (
+                  <PositionRow key={p.id} {...p} currency={s.currency} />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <section className="px-5 mt-4">
+              <div className="rounded-2xl bg-surface/60 border border-border/60 p-10 text-center text-sm text-muted-foreground">
+                Aucune position {tab.toLowerCase()}
+              </div>
+            </section>
+          )}
+        </>
       )}
+
+      {nav === "Trade" && <TradeView />}
+      {nav === "Insights" && <InsightsView />}
+      {nav === "Performance" && <PerformanceView />}
+      {nav === "Profile" && <ProfileView onOpenSecret={() => setConfigOpen(true)} />}
+
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 w-full z-50 pb-0 pt-0">
