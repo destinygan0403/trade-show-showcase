@@ -89,6 +89,29 @@ export function useTradingState() {
   );
 }
 
+let liveStarted = false;
+export function startLiveTicker() {
+  if (liveStarted || typeof window === "undefined") return;
+  liveStarted = true;
+  setInterval(() => {
+    const drift = (Math.random() - 0.5) * 0.8;
+    let plDelta = 0;
+    const positions = state.positions.map((p) => {
+      const newPrice = Math.max(0, p.currentPrice + drift + (Math.random() - 0.5) * 0.35);
+      const dir = p.side === "Sell" ? -1 : 1;
+      const change = (newPrice - p.currentPrice) * dir * p.lot * 100 + (Math.random() - 0.5) * 25;
+      plDelta += change;
+      return {
+        ...p,
+        currentPrice: Number(newPrice.toFixed(3)),
+        pl: p.pl + change,
+      };
+    });
+    state = { ...state, positions, totalPL: state.totalPL + plDelta };
+    emit();
+  }, 1000);
+}
+
 export function formatMoney(n: number, currency = "USD", withSign = false) {
   const sign = n < 0 ? "-" : withSign ? "+" : "";
   const abs = Math.abs(n);
