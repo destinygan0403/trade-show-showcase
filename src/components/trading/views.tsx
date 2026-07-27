@@ -16,9 +16,13 @@ import {
   CandlestickChart,
   Clock,
   Settings as SettingsIcon,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatNumber, useTradingState } from "@/lib/trading-store";
+import { useTheme, setTheme } from "@/lib/theme";
+
 
 
 /* -------------------- TRADE (MT5-style) -------------------- */
@@ -406,6 +410,8 @@ export function PerformanceView() {
 /* -------------------- PROFILE -------------------- */
 export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
   const s = useTradingState();
+  const theme = useTheme();
+  const isLight = theme === "light";
   const rows = [
     { icon: <Shield size={16} />, label: "Security", value: "2FA enabled" },
     { icon: <Bell size={16} />, label: "Notifications", value: "On" },
@@ -414,6 +420,7 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
   ];
   return (
     <section className="px-5 mt-4 space-y-4">
+
       <div className="rounded-2xl border border-border/60 bg-surface/60 p-4 flex items-center gap-4">
         <div
           className="h-14 w-14 rounded-full grid place-items-center text-lg font-bold text-black"
@@ -431,6 +438,51 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
           </div>
         </div>
       </div>
+
+      {/* Appearance / theme toggle */}
+      <div className="rounded-2xl border border-border/60 bg-surface/60 overflow-hidden">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground">
+              {isLight ? <Sun size={16} /> : <Moon size={16} />}
+            </span>
+            <div>
+              <div className="text-sm text-white">Appearance</div>
+              <div className="text-[11px] text-muted-foreground">
+                {isLight ? "Light theme" : "Dark theme"}
+              </div>
+            </div>
+          </div>
+          <div
+            className="inline-flex p-0.5 rounded-full border border-border/60 bg-background/50"
+            role="tablist"
+          >
+            <button
+              onClick={() => setTheme("dark")}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
+              style={
+                !isLight
+                  ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" }
+                  : { color: "var(--muted-foreground)" }
+              }
+            >
+              <Moon size={12} /> Dark
+            </button>
+            <button
+              onClick={() => setTheme("light")}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
+              style={
+                isLight
+                  ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" }
+                  : { color: "var(--muted-foreground)" }
+              }
+            >
+              <Sun size={12} /> Light
+            </button>
+          </div>
+        </div>
+      </div>
+
 
       <div className="rounded-2xl border border-border/60 overflow-hidden">
         {rows.map((r, i) => (
