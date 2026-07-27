@@ -48,7 +48,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
-      {nav !== "Performance" && (
+      {nav !== "Performance" && nav !== "Trade" && (
         <>
           {/* Header */}
           <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
