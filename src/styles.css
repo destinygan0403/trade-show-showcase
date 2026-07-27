@@ -37,37 +37,36 @@
 }
 
 /* ============================================
-   DARK THEME — deep navy with blue card gradient
-   Reference: Screenshot_20260727_010550
+   DARK THEME — pure black like system dark mode
    ============================================ */
 :root {
   --radius: 0.875rem;
-  --background: oklch(0.08 0.02 250);
+  --background: oklch(0 0 0);
   --foreground: oklch(0.98 0 0);
-  --surface: oklch(0.12 0.03 250);
-  --surface-2: oklch(0.18 0.05 250);
-  --card: oklch(0.32 0.12 255);
+  --surface: oklch(0.1 0 0);
+  --surface-2: oklch(0.16 0 0);
+  --card: oklch(0.12 0 0);
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.14 0.03 250);
+  --popover: oklch(0.1 0 0);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.7 0.18 250);
-  --primary-foreground: oklch(0.08 0.02 250);
-  --secondary: oklch(0.2 0.05 250);
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.16 0 0);
   --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.2 0.04 250);
-  --muted-foreground: oklch(0.68 0.03 250);
-  --accent: oklch(0.28 0.08 255);
+  --muted: oklch(0.14 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.2 0 0);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.68 0.24 15);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.25 0.05 250);
-  --input: oklch(0.2 0.05 250);
-  --ring: oklch(0.7 0.18 250);
-  --profit: oklch(0.82 0.14 200);   /* cyan-ish like the reference */
-  --loss: oklch(0.7 0.24 15);       /* red/pink sell */
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.16 0 0);
+  --ring: oklch(0.98 0 0);
+  --profit: oklch(0.7 0.18 155);
+  --loss: oklch(0.65 0.22 25);
   --electric: oklch(0.75 0.18 240);
-  --card-gradient: linear-gradient(160deg, oklch(0.38 0.14 255) 0%, oklch(0.22 0.1 258) 100%);
-  --bg-gradient: radial-gradient(1200px 800px at 50% -10%, oklch(0.18 0.06 255) 0%, oklch(0.06 0.02 250) 60%);
+  --card-gradient: linear-gradient(160deg, oklch(0.18 0 0) 0%, oklch(0.08 0 0) 100%);
+  --bg-gradient: none;
 }
 
 .dark { color-scheme: dark; }
