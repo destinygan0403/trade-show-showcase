@@ -6,25 +6,32 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   ArrowLeftRight,
-  ChevronRight,
   Wallet,
   BarChart3,
   LineChart,
   UserCircle2,
+  Settings2,
+  ArrowUpDown,
 } from "lucide-react";
+import { toast, Toaster } from "sonner";
 import { formatMoney, formatNumber, startLiveTicker, useTradingState } from "@/lib/trading-store";
 import { SecretConfig } from "./SecretConfig";
+
+type NavKey = "Accounts" | "Trade" | "Insights" | "Performance" | "Profile";
 
 export function Dashboard() {
   const s = useTradingState();
   const [tab, setTab] = useState<"Open" | "Pending" | "Closed">("Open");
+  const [nav, setNav] = useState<NavKey>("Accounts");
   const [configOpen, setConfigOpen] = useState(false);
   const tapRef = useRef<{ count: number; timer: ReturnType<typeof setTimeout> | null }>({
     count: 0,
     timer: null,
   });
 
-  useEffect(() => { startLiveTicker(); }, []);
+  useEffect(() => {
+    startLiveTicker();
+  }, []);
 
   const onTitleTap = () => {
     tapRef.current.count += 1;
@@ -36,62 +43,68 @@ export function Dashboard() {
     }
   };
 
-  const [intPart, decPart] = formatMoney(s.balance, s.currency).split(".");
-  const decOnly = decPart?.split(" ")[0] ?? "00";
+  const action = (label: string) => toast(`${label}`, { description: "Action indisponible en démo." });
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-24">
       {/* Header */}
-      <header className="flex items-center justify-between px-5 pt-6 pb-4">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
         <h1
           onClick={onTitleTap}
-          className="text-2xl font-semibold tracking-tight select-none cursor-default"
+          className="text-3xl font-bold tracking-tight select-none cursor-default truncate"
         >
           Accounts
         </h1>
-        <div className="flex items-center gap-2">
-          <IconBtn><Bell size={18} /></IconBtn>
-          <IconBtn><User size={18} /></IconBtn>
+        <div className="flex items-center gap-2 shrink-0">
+          <IconBtn onClick={() => action("Notifications")}>
+            <Bell size={18} />
+            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-[var(--color-loss)]" />
+          </IconBtn>
+          <IconBtn onClick={() => action("Profil")}>
+            <User size={18} />
+          </IconBtn>
         </div>
       </header>
 
       {/* Account card */}
       <section className="px-5">
-        <div className="rounded-2xl bg-surface/80 backdrop-blur border border-border/60 p-5 shadow-lg shadow-black/20">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="truncate font-medium text-foreground/90">{s.accountName}</span>
-                <span className="text-muted-foreground">#{s.accountId}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <Tag>Real</Tag>
-                <Tag>MT5</Tag>
-                <Tag accent>Pro</Tag>
-              </div>
+        <div className="relative rounded-3xl border border-border/60 p-5 shadow-xl shadow-black/30 overflow-hidden"
+          style={{ background: "linear-gradient(160deg, oklch(0.28 0.09 255) 0%, oklch(0.18 0.07 255) 55%, oklch(0.14 0.05 255) 100%)" }}
+        >
+          <button
+            onClick={() => setConfigOpen(true)}
+            className="absolute top-4 right-4 grid place-items-center h-8 w-8 rounded-full bg-white/10 border border-white/10 text-white/80 hover:bg-white/15"
+            aria-label="Settings"
+          >
+            <Settings2 size={14} />
+          </button>
+
+          <div className="min-w-0 pr-10">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="truncate font-semibold text-white/95">{s.accountName}</span>
+              <span className="text-white/50 text-xs"># {s.accountId}</span>
             </div>
-            <ChevronRight size={18} className="text-muted-foreground shrink-0" />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Tag>Real</Tag>
+              <Tag>MT5</Tag>
+              <Tag accent>Pro</Tag>
+            </div>
           </div>
 
-          <div className="mt-6">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Balance</p>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-4xl font-bold tracking-tight tabular-nums">{intPart}</span>
-              <span className="text-2xl font-semibold text-muted-foreground tabular-nums">
-                .{decOnly}
+          <div className="mt-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold tracking-tight tabular-nums text-white">
+                {formatMoney(s.balance, s.currency).replace(` ${s.currency}`, "")}
               </span>
-              <span className="text-sm text-muted-foreground ml-1">{s.currency}</span>
-            </div>
-            <div className="mt-1 text-sm tabular-nums" style={{ color: s.totalPL >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}>
-              {s.totalPL >= 0 ? "▲" : "▼"} {formatMoney(s.totalPL, s.currency, true)}
+              <span className="text-sm text-white/60">{s.currency}</span>
             </div>
           </div>
 
           <div className="mt-5 grid grid-cols-4 gap-2">
-            <Action icon={<TrendingUp size={18} />} label="Trade" primary />
-            <Action icon={<ArrowDownToLine size={18} />} label="Deposit" />
-            <Action icon={<ArrowUpFromLine size={18} />} label="Withdraw" />
-            <Action icon={<ArrowLeftRight size={18} />} label="Transfer" />
+            <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => action("Trade")} />
+            <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => action("Deposit")} />
+            <Action icon={<ArrowUpFromLine size={18} />} label="Withdraw" onClick={() => action("Withdraw")} />
+            <Action icon={<ArrowLeftRight size={18} />} label="Transfer" onClick={() => action("Transfer")} />
           </div>
         </div>
       </section>
@@ -112,8 +125,14 @@ export function Dashboard() {
               >
                 {t}
                 {count !== undefined && (
-                  <span className={`ml-1 ${active ? "text-foreground" : "text-muted-foreground/70"}`}>
-                    ({count})
+                  <span
+                    className={`ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      active
+                        ? "bg-primary/20 text-primary"
+                        : "bg-surface-2/70 text-muted-foreground"
+                    }`}
+                  >
+                    {count}
                   </span>
                 )}
                 {active && (
@@ -126,9 +145,20 @@ export function Dashboard() {
       </nav>
 
       {/* Positions */}
-      <section className="px-5 mt-4 space-y-3">
-        {tab === "Open" ? (
-          <>
+      {nav === "Accounts" && tab === "Open" ? (
+        <section className="px-5 mt-4">
+          <div className="flex items-center justify-between px-1 pb-2">
+            <span className="text-xs text-muted-foreground">Total P/L:</span>
+            <button
+              onClick={() => action("Trier")}
+              className="text-muted-foreground p-1 rounded-md hover:bg-surface-2/60"
+              aria-label="Sort"
+            >
+              <ArrowUpDown size={14} />
+            </button>
+          </div>
+
+          <div className="space-y-2">
             <SymbolSummary
               symbol="XAU/USD"
               count={s.positions.length}
@@ -138,35 +168,53 @@ export function Dashboard() {
             {s.positions.map((p) => (
               <PositionRow key={p.id} {...p} currency={s.currency} />
             ))}
-          </>
-        ) : (
-          <div className="rounded-2xl bg-surface/60 border border-border/60 p-10 text-center text-sm text-muted-foreground">
-            No {tab.toLowerCase()} positions
           </div>
-        )}
-      </section>
+        </section>
+      ) : (
+        <section className="px-5 mt-4">
+          <div className="rounded-2xl bg-surface/60 border border-border/60 p-10 text-center text-sm text-muted-foreground">
+            {nav !== "Accounts" ? `${nav} — bientôt disponible` : `Aucune position ${tab.toLowerCase()}`}
+          </div>
+        </section>
+      )}
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 inset-x-0 z-40">
         <div className="mx-auto max-w-md px-3 pb-3 pt-2">
           <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-lg shadow-xl grid grid-cols-5">
-            <NavItem icon={<Wallet size={18} />} label="Accounts" active />
-            <NavItem icon={<TrendingUp size={18} />} label="Trade" />
-            <NavItem icon={<BarChart3 size={18} />} label="Insights" />
-            <NavItem icon={<LineChart size={18} />} label="Performance" />
-            <NavItem icon={<UserCircle2 size={18} />} label="Profile" />
+            {(
+              [
+                { key: "Accounts", icon: <Wallet size={18} />, label: "Accounts" },
+                { key: "Trade", icon: <TrendingUp size={18} />, label: "Trade" },
+                { key: "Insights", icon: <BarChart3 size={18} />, label: "Insights" },
+                { key: "Performance", icon: <LineChart size={18} />, label: "Performance" },
+                { key: "Profile", icon: <UserCircle2 size={18} />, label: "Profile" },
+              ] as const
+            ).map((n) => (
+              <NavItem
+                key={n.key}
+                icon={n.icon}
+                label={n.label}
+                active={nav === n.key}
+                onClick={() => setNav(n.key as NavKey)}
+              />
+            ))}
           </div>
         </div>
       </nav>
 
       <SecretConfig open={configOpen} onClose={() => setConfigOpen(false)} />
+      <Toaster position="top-center" theme="dark" />
     </div>
   );
 }
 
-function IconBtn({ children }: { children: React.ReactNode }) {
+function IconBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button className="grid place-items-center h-10 w-10 rounded-full bg-surface/70 border border-border/60 text-foreground/90 hover:bg-surface">
+    <button
+      onClick={onClick}
+      className="relative grid place-items-center h-10 w-10 rounded-full bg-surface/70 border border-border/60 text-foreground/90 hover:bg-surface active:scale-95 transition"
+    >
       {children}
     </button>
   );
@@ -178,7 +226,7 @@ function Tag({ children, accent }: { children: React.ReactNode; accent?: boolean
       className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
         accent
           ? "border-transparent text-primary-foreground"
-          : "border-border/70 text-muted-foreground bg-surface-2/60"
+          : "border-white/15 text-white/80 bg-white/5"
       }`}
       style={accent ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-electric))" } : undefined}
     >
@@ -187,24 +235,34 @@ function Tag({ children, accent }: { children: React.ReactNode; accent?: boolean
   );
 }
 
-function Action({ icon, label, primary }: { icon: React.ReactNode; label: string; primary?: boolean }) {
+function Action({
+  icon,
+  label,
+  primary,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  primary?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <button className="flex flex-col items-center gap-1.5 group">
+    <button onClick={onClick} className="flex flex-col items-center gap-1.5 group active:scale-95 transition">
       <span
-        className={`grid place-items-center h-11 w-11 rounded-xl border transition-all ${
+        className={`grid place-items-center h-11 w-11 rounded-full border transition-all ${
           primary
-            ? "border-transparent text-primary-foreground shadow-lg"
-            : "border-border/60 bg-surface-2/60 text-foreground/90 group-hover:bg-surface-2"
+            ? "border-transparent shadow-lg text-black"
+            : "border-white/10 bg-white/5 text-white/90 group-hover:bg-white/10"
         }`}
         style={
           primary
-            ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-electric))" }
+            ? { background: "linear-gradient(135deg, oklch(0.9 0.17 90), oklch(0.75 0.16 70))" }
             : undefined
         }
       >
         {icon}
       </span>
-      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <span className="text-[11px] text-white/70">{label}</span>
     </button>
   );
 }
@@ -222,27 +280,31 @@ function SymbolSummary({
 }) {
   const positive = totalPL >= 0;
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-surface/70 border border-border/60 px-4 py-3">
+    <div
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/60 px-4 py-3"
+      style={{ background: "linear-gradient(135deg, oklch(0.28 0.08 255), oklch(0.2 0.06 255))" }}
+    >
       <div className="flex items-center gap-3 min-w-0">
         <div
-          className="h-9 w-9 rounded-full grid place-items-center text-xs font-bold"
+          className="h-8 w-8 shrink-0 rounded-full grid place-items-center text-[10px] font-bold"
           style={{ background: "linear-gradient(135deg, oklch(0.82 0.16 85), oklch(0.65 0.15 55))", color: "#1a0f00" }}
         >
           Au
         </div>
-        <div className="min-w-0">
-          <div className="text-sm font-semibold truncate">{symbol}</div>
-          <div className="text-xs text-muted-foreground">{count} positions</div>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-semibold truncate text-white">{symbol}</span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/10 text-white/80">
+            {count}
+          </span>
         </div>
       </div>
-      <div className="text-right tabular-nums">
+      <div className="text-right tabular-nums shrink-0">
         <div
           className="text-sm font-semibold"
           style={{ color: positive ? "var(--color-profit)" : "var(--color-loss)" }}
         >
           {formatMoney(totalPL, currency, true)}
         </div>
-        <div className="text-[11px] text-muted-foreground">Total P/L</div>
       </div>
     </div>
   );
@@ -268,38 +330,59 @@ function PositionRow({
   const positive = pl >= 0;
   const sideColor = side === "Sell" ? "var(--color-loss)" : "var(--color-profit)";
   return (
-    <div className="rounded-2xl bg-surface/60 border border-border/60 px-4 py-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-sm font-semibold">{symbol}</div>
-          <div className="mt-0.5 text-xs text-muted-foreground truncate">
-            <span style={{ color: sideColor }} className="font-medium">
-              {side} {lot.toFixed(2)} lot
-            </span>{" "}
-            at <span className="text-foreground/80 tabular-nums">{formatNumber(openPrice)}</span>
-          </div>
-        </div>
-        <div className="text-right tabular-nums shrink-0">
-          <div
-            className="text-sm font-semibold"
-            style={{ color: positive ? "var(--color-profit)" : "var(--color-loss)" }}
-          >
-            {formatMoney(pl, currency, true)}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{formatNumber(currentPrice)}</div>
+    <button
+      className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl border border-border/60 px-4 py-3 active:scale-[0.99] transition"
+      style={{ background: "linear-gradient(135deg, oklch(0.26 0.07 255), oklch(0.18 0.05 255))" }}
+    >
+      <div className="min-w-0">
+        <div className="text-sm font-semibold text-white">{symbol}</div>
+        <div className="mt-0.5 text-xs truncate">
+          <span style={{ color: sideColor }} className="font-medium">
+            {side} {lot.toFixed(2)} lot
+          </span>{" "}
+          <span className="text-white/60">at</span>{" "}
+          <span className="text-white/80 tabular-nums">{formatNumber(openPrice)}</span>
         </div>
       </div>
-    </div>
+      <div className="text-right tabular-nums shrink-0">
+        <div
+          className="text-sm font-semibold"
+          style={{ color: positive ? "var(--color-profit)" : "var(--color-loss)" }}
+        >
+          {formatMoney(pl, currency, true)}
+        </div>
+        <div className="text-[11px] text-white/60">{formatNumber(currentPrice)}</div>
+      </div>
+    </button>
   );
 }
 
-function NavItem({ icon, label, active }: { icon: React.ReactNode; label: string; active?: boolean }) {
+function NavItem({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <button className="flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium">
-      <span style={{ color: active ? "var(--color-electric)" : undefined }} className={active ? "" : "text-muted-foreground"}>
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium active:scale-95 transition"
+    >
+      <span
+        style={{ color: active ? "var(--color-electric)" : undefined }}
+        className={active ? "" : "text-muted-foreground"}
+      >
         {icon}
       </span>
-      <span style={{ color: active ? "var(--color-electric)" : undefined }} className={active ? "" : "text-muted-foreground"}>
+      <span
+        style={{ color: active ? "var(--color-electric)" : undefined }}
+        className={active ? "" : "text-muted-foreground"}
+      >
         {label}
       </span>
     </button>
