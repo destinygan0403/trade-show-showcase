@@ -113,3 +113,9 @@
     background-attachment: fixed;
   }
 }
+
+/* Light theme legibility overrides — many components hardcode white text */
+html.light [class*="text-white"] { color: var(--color-foreground) !important; }
+html.light .bg-white\/10 { background-color: color-mix(in oklab, var(--color-foreground) 8%, transparent) !important; }
+html.light .bg-white\/15 { background-color: color-mix(in oklab, var(--color-foreground) 12%, transparent) !important; }
+html.light .bg-white\/5 { background-color: color-mix(in oklab, var(--color-foreground) 4%, transparent) !important; }
