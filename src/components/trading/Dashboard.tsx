@@ -278,10 +278,7 @@ function SymbolSummary({
 }) {
   const positive = totalPL >= 0;
   return (
-    <div
-      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/60 px-4 py-3"
-      style={{ background: "linear-gradient(135deg, oklch(0.28 0.08 255), oklch(0.2 0.06 255))" }}
-    >
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 border-b border-border/60 bg-surface/30">
       <div className="flex items-center gap-3 min-w-0">
         <XauLogo />
         <div className="flex items-center gap-2 min-w-0">
