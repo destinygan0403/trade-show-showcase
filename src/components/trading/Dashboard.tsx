@@ -146,8 +146,8 @@ export function Dashboard() {
 
       {/* Positions */}
       {nav === "Accounts" && tab === "Open" ? (
-        <section className="px-5 mt-4">
-          <div className="flex items-center justify-between px-1 pb-2">
+        <section className="mt-4">
+          <div className="flex items-center justify-between px-5 pb-2">
             <span className="text-xs text-muted-foreground">Total P/L:</span>
             <button
               onClick={() => action("Trier")}
@@ -158,7 +158,7 @@ export function Dashboard() {
             </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="border-t border-border/60">
             <SymbolSummary
               symbol="XAU/USD"
               count={s.positions.length}
