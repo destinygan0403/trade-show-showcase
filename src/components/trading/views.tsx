@@ -9,105 +9,174 @@ import {
   LogOut,
   ChevronRight,
   Star,
+  Menu,
+  Plus,
+  ArrowRight,
+  ArrowUpDown,
+  CandlestickChart,
+  Clock,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatNumber, useTradingState } from "@/lib/trading-store";
 
 
-/* -------------------- TRADE -------------------- */
-export function TradeView() {
+/* -------------------- TRADE (MT5-style) -------------------- */
+export function TradeView({ onNavigate }: { onNavigate?: (key: "Accounts" | "Trade" | "Insights" | "Performance" | "Profile") => void }) {
   const s = useTradingState();
-  const price = s.positions[0]?.currentPrice ?? 4046;
-  const spread = 0.24;
-  const bid = price - spread / 2;
-  const ask = price + spread / 2;
-  const [lot, setLot] = useState(1.0);
+  const totalPL = s.positions.reduce((a, p) => a + p.pl, 0);
+  const equity = s.balance + totalPL;
+  const freeMargin = equity - Math.abs(totalPL) * 0.02;
 
-  const watchlist = [
-    { sym: "XAU/USD", name: "Gold vs Dollar", price, chg: +0.42 },
-    { sym: "EUR/USD", name: "Euro vs Dollar", price: 1.0842, chg: -0.12 },
-    { sym: "BTC/USD", name: "Bitcoin", price: 68432.5, chg: +1.87 },
-    { sym: "US500", name: "S&P 500", price: 5623.4, chg: +0.34 },
-    { sym: "USOIL", name: "Crude Oil", price: 78.12, chg: -0.68 },
-    { sym: "NAS100", name: "Nasdaq 100", price: 19842.7, chg: +0.91 },
-  ];
+  const fmt2 = (n: number) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <section className="px-5 mt-4 space-y-4">
-      {/* Quick trade panel */}
-      <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold text-white">XAU/USD</div>
-            <div className="text-[11px] text-muted-foreground">Gold Spot</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[11px] text-muted-foreground">Spread</div>
-            <div className="text-xs font-semibold text-white tabular-nums">{spread.toFixed(2)}</div>
-          </div>
+    <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+        <button onClick={() => toast("Menu")} className="h-8 w-8 grid place-items-center text-white/70">
+          <Menu size={18} />
+        </button>
+        <div
+          className="text-[15px] font-semibold tabular-nums"
+          style={{ color: totalPL >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}
+        >
+          {totalPL >= 0 ? "" : "-"}{fmt2(Math.abs(totalPL))} USD
         </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            onClick={() => toast(`Sell ${lot.toFixed(2)} lot @ ${formatNumber(bid)}`)}
-            className="rounded-xl px-3 py-3 text-left active:scale-[0.98] transition"
-            style={{ background: "color-mix(in oklch, var(--color-loss) 22%, transparent)", border: "1px solid color-mix(in oklch, var(--color-loss) 40%, transparent)" }}
-          >
-            <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-loss)" }}>Sell</div>
-            <div className="text-lg font-bold text-white tabular-nums">{formatNumber(bid)}</div>
-          </button>
-          <button
-            onClick={() => toast(`Buy ${lot.toFixed(2)} lot @ ${formatNumber(ask)}`)}
-            className="rounded-xl px-3 py-3 text-left active:scale-[0.98] transition"
-            style={{ background: "color-mix(in oklch, var(--color-profit) 22%, transparent)", border: "1px solid color-mix(in oklch, var(--color-profit) 40%, transparent)" }}
-          >
-            <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-profit)" }}>Buy</div>
-            <div className="text-lg font-bold text-white tabular-nums">{formatNumber(ask)}</div>
-          </button>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">Volume</span>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setLot((v) => Math.max(0.01, +(v - 0.5).toFixed(2)))} className="h-8 w-8 rounded-lg bg-surface-2/70 text-white">-</button>
-            <span className="text-sm font-semibold text-white tabular-nums w-16 text-center">{lot.toFixed(2)}</span>
-            <button onClick={() => setLot((v) => +(v + 0.5).toFixed(2))} className="h-8 w-8 rounded-lg bg-surface-2/70 text-white">+</button>
-          </div>
-        </div>
+        <button onClick={() => toast("Nouvel ordre")} className="h-8 w-8 grid place-items-center text-white/70">
+          <Plus size={20} />
+        </button>
       </div>
 
-      {/* Watchlist */}
-      <div>
-        <div className="flex items-center justify-between px-1 pb-2">
-          <h2 className="text-sm font-semibold text-white">Watchlist</h2>
-          <button onClick={() => toast("Edit watchlist")} className="text-xs text-primary">Edit</button>
-        </div>
-        <div className="rounded-2xl border border-border/60 overflow-hidden">
-          {watchlist.map((w, i) => {
-            const up = w.chg >= 0;
-            return (
-              <button
-                key={w.sym}
-                onClick={() => toast(`${w.sym} — ${formatNumber(w.price)}`)}
-                className={`w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 text-left bg-surface/40 ${i > 0 ? "border-t border-border/50" : ""}`}
-              >
-                <Star size={14} className="text-yellow-400/70" />
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">{w.sym}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{w.name}</div>
-                </div>
-                <div className="text-right tabular-nums">
-                  <div className="text-sm font-semibold text-white">{formatNumber(w.price, w.price > 100 ? 2 : 4)}</div>
-                  <div className="text-[11px] font-medium" style={{ color: up ? "var(--color-profit)" : "var(--color-loss)" }}>
-                    {up ? "+" : ""}{w.chg.toFixed(2)}%
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+      {/* Account summary rows */}
+      <div className="px-4 pt-2 pb-3 space-y-1.5">
+        <SummaryRow label="Balance:" value={fmt2(s.balance)} />
+        <SummaryRow label="Equity:" value={fmt2(equity)} />
+        <SummaryRow label="Free Margin:" value={fmt2(freeMargin)} />
+      </div>
+
+      {/* Positions header */}
+      <div className="flex items-center justify-between px-4 pt-2 pb-2 border-b border-border/40">
+        <span className="text-[13px] text-white/80">Positions</span>
+        <button onClick={() => toast("Trier")} className="text-white/50">
+          <ArrowUpDown size={14} />
+        </button>
+      </div>
+
+      {/* Positions list */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {s.positions.map((p) => (
+          <MtPositionRow
+            key={p.id}
+            side={p.side}
+            lot={p.lot}
+            openPrice={p.openPrice}
+            currentPrice={p.currentPrice}
+            pl={p.pl}
+          />
+        ))}
+      </div>
+
+      {/* MT5-style bottom tab bar */}
+      <div className="border-t border-border/60 bg-surface/95 backdrop-blur-md grid grid-cols-5">
+        <MtTab icon={<ArrowUpDown size={20} />} label="Quotes" onClick={() => onNavigate?.("Accounts")} />
+        <MtTab icon={<CandlestickChart size={20} />} label="Chart" onClick={() => onNavigate?.("Performance")} />
+        <MtTab icon={<BarsIcon />} label="Trade" active />
+        <MtTab icon={<Clock size={20} />} label="History" onClick={() => toast("Historique")} />
+        <MtTab icon={<SettingsIcon size={20} />} label="Settings" onClick={() => onNavigate?.("Profile")} />
       </div>
     </section>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[15px] text-white/85">{label}</span>
+      <span className="text-[15px] font-semibold text-white tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function MtPositionRow({
+  side,
+  lot,
+  openPrice,
+  currentPrice,
+  pl,
+}: {
+  side: "Sell" | "Buy";
+  lot: number;
+  openPrice: number;
+  currentPrice: number;
+  pl: number;
+}) {
+  const sideColor = side === "Sell" ? "var(--color-loss)" : "var(--color-profit)";
+  const plColor = pl >= 0 ? "var(--color-profit)" : "var(--color-loss)";
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  return (
+    <button className="w-full text-left grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 border-b border-border/40 active:bg-surface/40">
+      <div className="min-w-0">
+        <div className="text-[15px] leading-tight">
+          <span className="font-semibold text-white">XAUUSDm </span>
+          <span style={{ color: sideColor }} className="font-medium">
+            {side.toLowerCase()} {lot.toFixed(2)}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-[13px] text-white/70 tabular-nums">
+          <span>{fmt(openPrice)}</span>
+          <ArrowRight size={12} className="text-white/40" />
+          <span>{fmt(currentPrice)}</span>
+        </div>
+      </div>
+      <div className="text-right text-[15px] font-semibold tabular-nums" style={{ color: plColor }}>
+        {pl >= 0 ? "" : "-"}
+        {Math.abs(pl).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </div>
+    </button>
+  );
+}
+
+function MtTab({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium"
+      style={{ color: active ? "var(--color-loss)" : "var(--muted-foreground)" }}
+    >
+      <span
+        className={active ? "grid place-items-center h-8 w-9 rounded-md" : ""}
+        style={active ? { background: "color-mix(in oklch, var(--color-loss) 18%, transparent)" } : undefined}
+      >
+        {icon}
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function BarsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <line x1="7" y1="4" x2="7" y2="20" />
+      <line x1="4" y1="8" x2="10" y2="8" />
+      <line x1="4" y1="16" x2="10" y2="16" />
+      <line x1="17" y1="4" x2="17" y2="20" />
+      <line x1="14" y1="8" x2="20" y2="8" />
+      <line x1="14" y1="16" x2="20" y2="16" />
+    </svg>
   );
 }
 
