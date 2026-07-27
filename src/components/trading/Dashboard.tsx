@@ -16,6 +16,7 @@ import {
 import { toast, Toaster } from "sonner";
 import { formatMoney, formatNumber, startLiveTicker, useTradingState } from "@/lib/trading-store";
 import { SecretConfig } from "./SecretConfig";
+import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
 
 type NavKey = "Accounts" | "Trade" | "Insights" | "Performance" | "Profile";
 
