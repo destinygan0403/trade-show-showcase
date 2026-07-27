@@ -72,7 +72,7 @@ export function Dashboard() {
           {/* Account card */}
           <section className="px-5">
             <div className="relative rounded-3xl border border-border/60 p-5 shadow-xl shadow-black/30 overflow-hidden"
-              style={{ background: "linear-gradient(160deg, oklch(0.28 0.09 255) 0%, oklch(0.18 0.07 255) 55%, oklch(0.14 0.05 255) 100%)" }}
+              style={{ background: "var(--card-gradient)" }}
             >
               <button
                 onClick={() => setConfigOpen(true)}
