@@ -187,7 +187,7 @@ export function Dashboard() {
         </>
       )}
 
-      {nav === "Trade" && <TradeView />}
+      {nav === "Trade" && <TradeView onNavigate={setNav} />}
       {nav === "Insights" && <InsightsView />}
       {nav === "Performance" && <PerformanceView />}
       {nav === "Profile" && <ProfileView onOpenSecret={() => setConfigOpen(true)} />}
