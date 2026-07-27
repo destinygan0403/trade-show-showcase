@@ -24,6 +24,8 @@ export function Dashboard() {
     timer: null,
   });
 
+  useEffect(() => { startLiveTicker(); }, []);
+
   const onTitleTap = () => {
     tapRef.current.count += 1;
     if (tapRef.current.timer) clearTimeout(tapRef.current.timer);
