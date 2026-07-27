@@ -179,8 +179,8 @@ export function Dashboard() {
       )}
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 px-3 pb-3 pt-2">
-        <div className="rounded-2xl border border-border/60 bg-surface/95 backdrop-blur-lg shadow-xl shadow-black/40 grid grid-cols-5">
+      <nav className="fixed bottom-0 left-0 right-0 w-full z-50 pb-0 pt-0">
+        <div className="border-t border-border/60 bg-surface/98 backdrop-blur-lg shadow-[0_-8px_32px_rgba(0,0,0,0.45)] grid grid-cols-5">
           {(
             [
               { key: "Accounts", icon: <Wallet size={18} />, label: "Accounts" },
