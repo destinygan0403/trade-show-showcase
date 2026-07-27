@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
   Newspaper,
   Calendar,
   Shield,
@@ -11,10 +9,10 @@ import {
   LogOut,
   ChevronRight,
   Star,
-  Activity,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatMoney, formatNumber, useTradingState } from "@/lib/trading-store";
+import { formatNumber, useTradingState } from "@/lib/trading-store";
+
 
 /* -------------------- TRADE -------------------- */
 export function TradeView() {
@@ -181,161 +179,191 @@ export function InsightsView() {
   );
 }
 
-/* -------------------- PERFORMANCE -------------------- */
-export function PerformanceView() {
-  const s = useTradingState();
-  const [range, setRange] = useState<"1D" | "1W" | "1M" | "3M" | "1Y" | "ALL">("1D");
-  const points = { "1D": 96, "1W": 120, "1M": 150, "3M": 180, "1Y": 220, ALL: 260 }[range];
+/* -------------------- PERFORMANCE (chart only) -------------------- */
+type Candle = { o: number; h: number; l: number; c: number };
 
-  const [series, setSeries] = useState<number[]>(() => genSeries(points, s.balance));
-
-  // regenerate on range change
-  useEffect(() => {
-    setSeries(genSeries(points, s.balance));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range]);
-
-  // live update — push new tick every second, drop oldest
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSeries((prev) => {
-        const last = prev[prev.length - 1];
-        const vol = last * 0.0008;
-        const next = Math.max(1, last + (Math.random() - 0.48) * vol);
-        return [...prev.slice(1), next];
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const first = series[0];
-  const last = series[series.length - 1];
-  const change = last - first;
-  const pct = (change / first) * 100;
-  const positive = change >= 0;
-  const color = positive ? "var(--color-profit)" : "var(--color-loss)";
-
-  const stats = [
-    { label: "Win rate", value: "72.4%" },
-    { label: "Profit factor", value: "2.18" },
-    { label: "Best trade", value: formatMoney(1_284_320, s.currency, true) },
-    { label: "Worst trade", value: formatMoney(-412_950, s.currency, true) },
-    { label: "Avg. duration", value: "3h 42m" },
-    { label: "Total trades", value: "1,284" },
-  ];
-
-  return (
-    <section className="px-5 mt-4 space-y-4">
-      <div className="rounded-2xl border border-border/60 bg-surface/60 p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Equity</div>
-            <div className="mt-1 text-2xl font-bold text-white tabular-nums">
-              {formatMoney(last, s.currency).replace(` ${s.currency}`, "")}
-              <span className="text-sm text-white/50 font-medium ml-1">{s.currency}</span>
-            </div>
-            <div className="mt-1 text-sm font-semibold tabular-nums flex items-center gap-1" style={{ color }}>
-              {positive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              {positive ? "+" : ""}{formatMoney(change, s.currency).replace(` ${s.currency}`, "")} ({positive ? "+" : ""}{pct.toFixed(2)}%)
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: "var(--color-profit)" }} />
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "var(--color-profit)" }} />
-            </span>
-            LIVE
-          </div>
-        </div>
-
-        <LiveChart data={series} color={color} />
-
-        <div className="mt-3 grid grid-cols-6 gap-1">
-          {(["1D", "1W", "1M", "3M", "1Y", "ALL"] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={`text-[11px] font-semibold py-1.5 rounded-md transition ${
-                range === r ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-surface-2/60"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border/60 bg-surface/60 overflow-hidden">
-        <div className="px-4 py-3 border-b border-border/60 flex items-center gap-2">
-          <Activity size={14} className="text-primary" />
-          <span className="text-sm font-semibold text-white">Statistics</span>
-        </div>
-        <div className="grid grid-cols-2">
-          {stats.map((st, i) => (
-            <div
-              key={st.label}
-              className={`px-4 py-3 ${i % 2 === 0 ? "border-r border-border/50" : ""} ${i < stats.length - 2 ? "border-b border-border/50" : ""}`}
-            >
-              <div className="text-[11px] text-muted-foreground">{st.label}</div>
-              <div className="mt-0.5 text-sm font-semibold text-white tabular-nums">{st.value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function genSeries(n: number, endValue: number): number[] {
-  const arr: number[] = new Array(n);
-  // walk backwards from endValue with small drift/volatility
-  let v = endValue;
-  arr[n - 1] = v;
-  for (let i = n - 2; i >= 0; i--) {
-    const vol = v * 0.004;
-    // slight negative drift going back so history ends lower on average
-    v = v - (Math.random() - 0.55) * vol;
-    arr[i] = Math.max(1, v);
+function genCandles(n: number, end: number): Candle[] {
+  const arr: Candle[] = [];
+  let price = end * 0.98;
+  for (let i = 0; i < n; i++) {
+    const vol = price * 0.0015;
+    const o = price;
+    const c = Math.max(1, o + (Math.random() - 0.5) * vol * 3);
+    const h = Math.max(o, c) + Math.random() * vol;
+    const l = Math.min(o, c) - Math.random() * vol;
+    arr.push({ o, h, l, c });
+    price = c;
   }
   return arr;
 }
 
-function LiveChart({ data, color }: { data: number[]; color: string }) {
-  const ref = useRef<SVGSVGElement>(null);
-  const w = 320;
-  const h = 140;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = Math.max(1, max - min);
-  const step = w / (data.length - 1);
-  const points = data.map((v, i) => [i * step, h - ((v - min) / range) * h] as const);
-  const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(" ");
-  const area = `${path} L${w},${h} L0,${h} Z`;
-  const lastPt = points[points.length - 1];
-  const gradId = "chartGrad";
+export function PerformanceView() {
+  const s = useTradingState();
+  const [tf, setTf] = useState<"M1" | "M5" | "M15" | "M30" | "H1" | "H4" | "D1">("M30");
+  const N = 60;
+  const [candles, setCandles] = useState<Candle[]>(() => genCandles(N, s.balance / 1e6 + 1.075));
+
+  useEffect(() => {
+    setCandles(genCandles(N, s.balance / 1e6 + 1.075));
+  }, [tf, s.balance]);
+
+  // live tick — mutate last candle
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCandles((prev) => {
+        const next = prev.slice();
+        const last = { ...next[next.length - 1] };
+        const vol = last.c * 0.0008;
+        const nc = Math.max(1, last.c + (Math.random() - 0.5) * vol * 2);
+        last.c = nc;
+        last.h = Math.max(last.h, nc);
+        last.l = Math.min(last.l, nc);
+        next[next.length - 1] = last;
+        // occasionally push a new candle
+        if (Math.random() < 0.12) {
+          next.shift();
+          next.push({ o: nc, h: nc, l: nc, c: nc + (Math.random() - 0.5) * vol });
+        }
+        return next;
+      });
+    }, 900);
+    return () => clearInterval(id);
+  }, []);
+
+  const last = candles[candles.length - 1];
+  const prev = candles[candles.length - 2] ?? last;
+  const bid = last.c;
+  const ask = last.c + 0.00007;
+  const up = last.c >= prev.c;
+
+  const min = Math.min(...candles.map((c) => c.l));
+  const max = Math.max(...candles.map((c) => c.h));
+  const pad = (max - min) * 0.15 || 0.001;
+  const yMin = min - pad;
+  const yMax = max + pad;
+  const range = yMax - yMin;
+
+  const W = 340;
+  const H = 380;
+  const rightAxis = 44;
+  const chartW = W - rightAxis;
+  const cw = chartW / candles.length;
+  const bodyW = Math.max(2, cw * 0.65);
+  const yOf = (v: number) => ((yMax - v) / range) * H;
+
+  const gridLines = 8;
+  const ticks = Array.from({ length: gridLines + 1 }, (_, i) => yMin + (range * i) / gridLines);
+
+  const fmt = (v: number) => v.toFixed(5);
 
   return (
-    <div className="mt-3 -mx-1">
-      <svg ref={ref} viewBox={`0 0 ${w} ${h}`} className="w-full h-[140px]" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* grid */}
-        {[0.25, 0.5, 0.75].map((f) => (
-          <line key={f} x1="0" x2={w} y1={h * f} y2={h * f} stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" />
+    <section className="mt-2 flex flex-col">
+      {/* Bid / Ask bar */}
+      <div className="grid grid-cols-2 gap-2 px-3">
+        <div
+          className="rounded-md px-3 py-2"
+          style={{ background: "color-mix(in oklch, var(--color-loss) 20%, transparent)" }}
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-loss)" }}>Sell</div>
+          <div className="text-lg font-bold text-white tabular-nums leading-none mt-0.5">
+            {fmt(bid).slice(0, 4)}<span className="text-2xl">{fmt(bid).slice(4, 6)}</span><sup className="text-xs">{fmt(bid).slice(6)}</sup>
+          </div>
+        </div>
+        <div
+          className="rounded-md px-3 py-2 text-right"
+          style={{ background: "color-mix(in oklch, var(--color-profit) 20%, transparent)" }}
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-profit)" }}>Buy</div>
+          <div className="text-lg font-bold text-white tabular-nums leading-none mt-0.5">
+            {fmt(ask).slice(0, 4)}<span className="text-2xl">{fmt(ask).slice(4, 6)}</span><sup className="text-xs">{fmt(ask).slice(6)}</sup>
+          </div>
+        </div>
+      </div>
+
+      {/* Timeframe bar */}
+      <div className="mt-2 px-3 flex items-center gap-1 overflow-x-auto no-scrollbar">
+        {(["M1", "M5", "M15", "M30", "H1", "H4", "D1"] as const).map((r) => (
+          <button
+            key={r}
+            onClick={() => setTf(r)}
+            className={`text-[11px] font-semibold px-2.5 py-1 rounded transition ${
+              tf === r ? "bg-primary/25 text-primary" : "text-muted-foreground"
+            }`}
+          >
+            {r}
+          </button>
         ))}
-        <path d={area} fill={`url(#${gradId})`} />
-        <path d={path} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={lastPt[0]} cy={lastPt[1]} r="3" fill={color} />
-        <circle cx={lastPt[0]} cy={lastPt[1]} r="6" fill={color} fillOpacity="0.25">
-          <animate attributeName="r" values="4;9;4" dur="1.6s" repeatCount="indefinite" />
-          <animate attributeName="fill-opacity" values="0.35;0;0.35" dur="1.6s" repeatCount="indefinite" />
-        </circle>
-      </svg>
-    </div>
+        <div className="ml-auto text-[10px] text-muted-foreground">EUR/USD · {tf}</div>
+      </div>
+
+      {/* Chart */}
+      <div className="mt-2 px-2">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[420px]" preserveAspectRatio="none">
+          {/* horizontal grid + right axis labels */}
+          {ticks.map((t, i) => (
+            <g key={i}>
+              <line x1="0" x2={chartW} y1={yOf(t)} y2={yOf(t)} stroke="currentColor" strokeOpacity="0.06" />
+              <text x={chartW + 4} y={yOf(t) + 3} fontSize="8" fill="currentColor" fillOpacity="0.55" fontFamily="monospace">
+                {t.toFixed(5)}
+              </text>
+            </g>
+          ))}
+          {/* vertical grid */}
+          {[0.25, 0.5, 0.75].map((f) => (
+            <line key={f} x1={chartW * f} x2={chartW * f} y1="0" y2={H} stroke="currentColor" strokeOpacity="0.05" />
+          ))}
+
+          {/* candles */}
+          {candles.map((c, i) => {
+            const x = i * cw + cw / 2;
+            const isUp = c.c >= c.o;
+            const col = isUp ? "var(--color-profit)" : "var(--color-loss)";
+            const yO = yOf(c.o);
+            const yC = yOf(c.c);
+            const yH = yOf(c.h);
+            const yL = yOf(c.l);
+            const top = Math.min(yO, yC);
+            const bh = Math.max(1, Math.abs(yC - yO));
+            return (
+              <g key={i}>
+                <line x1={x} x2={x} y1={yH} y2={yL} stroke={col} strokeWidth="1" />
+                <rect x={x - bodyW / 2} y={top} width={bodyW} height={bh} fill={col} />
+              </g>
+            );
+          })}
+
+          {/* current price line */}
+          <line
+            x1="0"
+            x2={chartW}
+            y1={yOf(last.c)}
+            y2={yOf(last.c)}
+            stroke={up ? "var(--color-profit)" : "var(--color-loss)"}
+            strokeWidth="0.7"
+            strokeDasharray="2 2"
+            strokeOpacity="0.8"
+          />
+          <rect
+            x={chartW}
+            y={yOf(last.c) - 7}
+            width={rightAxis}
+            height="14"
+            fill={up ? "var(--color-profit)" : "var(--color-loss)"}
+          />
+          <text
+            x={chartW + rightAxis / 2}
+            y={yOf(last.c) + 3}
+            fontSize="8.5"
+            fill="white"
+            fontFamily="monospace"
+            textAnchor="middle"
+            fontWeight="700"
+          >
+            {last.c.toFixed(5)}
+          </text>
+        </svg>
+      </div>
+    </section>
   );
 }
 
