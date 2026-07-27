@@ -350,6 +350,8 @@ function PositionRow({
       </div>
     </button>
   );
+}
+
 
 function XauLogo() {
   return (
