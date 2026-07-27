@@ -285,12 +285,7 @@ function SymbolSummary({
       style={{ background: "linear-gradient(135deg, oklch(0.28 0.08 255), oklch(0.2 0.06 255))" }}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div
-          className="h-8 w-8 shrink-0 rounded-full grid place-items-center text-[10px] font-bold"
-          style={{ background: "linear-gradient(135deg, oklch(0.82 0.16 85), oklch(0.65 0.15 55))", color: "#1a0f00" }}
-        >
-          Au
-        </div>
+        <XauLogo />
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-semibold truncate text-white">{symbol}</span>
           <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/10 text-white/80">
@@ -356,6 +351,37 @@ function PositionRow({
     </button>
   );
 }
+
+
+function XauLogo() {
+  return (
+    <div
+      className="h-8 w-8 shrink-0 rounded-full grid place-items-center overflow-hidden"
+      style={{ background: "radial-gradient(circle at 30% 30%, oklch(0.35 0.1 255), oklch(0.18 0.07 255))" }}
+    >
+      <svg viewBox="0 0 32 32" className="h-6 w-6" aria-hidden>
+        <defs>
+          <radialGradient id="xauGold" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffe89a" />
+            <stop offset="55%" stopColor="#f2b23a" />
+            <stop offset="100%" stopColor="#8a5a12" />
+          </radialGradient>
+        </defs>
+        <circle cx="16" cy="16" r="11" fill="url(#xauGold)" />
+        <circle cx="12.5" cy="12" r="2.6" fill="#fff6d5" opacity="0.85" />
+        <path
+          d="M11 20 Q16 15 21 20"
+          stroke="#5a3a08"
+          strokeWidth="1.2"
+          fill="none"
+          strokeLinecap="round"
+          opacity="0.6"
+        />
+      </svg>
+    </div>
+  );
+}
+
 
 function NavItem({
   icon,
