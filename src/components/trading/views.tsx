@@ -232,8 +232,6 @@ export function PerformanceView() {
 
   const last = candles[candles.length - 1];
   const prev = candles[candles.length - 2] ?? last;
-  const bid = last.c;
-  const ask = last.c + 0.00007;
   const up = last.c >= prev.c;
 
   const min = Math.min(...candles.map((c) => c.l));
@@ -254,34 +252,11 @@ export function PerformanceView() {
   const gridLines = 8;
   const ticks = Array.from({ length: gridLines + 1 }, (_, i) => yMin + (range * i) / gridLines);
 
-  const fmt = (v: number) => v.toFixed(5);
 
   return (
-    <section className="mt-2 flex flex-col">
-      {/* Bid / Ask bar */}
-      <div className="grid grid-cols-2 gap-2 px-3">
-        <div
-          className="rounded-md px-3 py-2"
-          style={{ background: "color-mix(in oklch, var(--color-loss) 20%, transparent)" }}
-        >
-          <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-loss)" }}>Sell</div>
-          <div className="text-lg font-bold text-white tabular-nums leading-none mt-0.5">
-            {fmt(bid).slice(0, 4)}<span className="text-2xl">{fmt(bid).slice(4, 6)}</span><sup className="text-xs">{fmt(bid).slice(6)}</sup>
-          </div>
-        </div>
-        <div
-          className="rounded-md px-3 py-2 text-right"
-          style={{ background: "color-mix(in oklch, var(--color-profit) 20%, transparent)" }}
-        >
-          <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-profit)" }}>Buy</div>
-          <div className="text-lg font-bold text-white tabular-nums leading-none mt-0.5">
-            {fmt(ask).slice(0, 4)}<span className="text-2xl">{fmt(ask).slice(4, 6)}</span><sup className="text-xs">{fmt(ask).slice(6)}</sup>
-          </div>
-        </div>
-      </div>
-
+    <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10">
       {/* Timeframe bar */}
-      <div className="mt-2 px-3 flex items-center gap-1 overflow-x-auto no-scrollbar">
+      <div className="px-3 pt-3 pb-2 flex items-center gap-1 overflow-x-auto no-scrollbar border-b border-border/60">
         {(["M1", "M5", "M15", "M30", "H1", "H4", "D1"] as const).map((r) => (
           <button
             key={r}
@@ -296,9 +271,10 @@ export function PerformanceView() {
         <div className="ml-auto text-[10px] text-muted-foreground">EUR/USD · {tf}</div>
       </div>
 
-      {/* Chart */}
-      <div className="mt-2 px-2">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[420px]" preserveAspectRatio="none">
+      {/* Chart fills remaining space */}
+      <div className="flex-1 min-h-0 px-2 py-2">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
+
           {/* horizontal grid + right axis labels */}
           {ticks.map((t, i) => (
             <g key={i}>
