@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
   Newspaper,
   Calendar,
   Shield,
@@ -11,10 +9,10 @@ import {
   LogOut,
   ChevronRight,
   Star,
-  Activity,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatMoney, formatNumber, useTradingState } from "@/lib/trading-store";
+import { formatNumber, useTradingState } from "@/lib/trading-store";
+
 
 /* -------------------- TRADE -------------------- */
 export function TradeView() {
