@@ -161,15 +161,6 @@ export function Dashboard() {
                     <span className="text-sm text-white/60">{currency}</span>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[10px] uppercase tracking-wider text-white/50">Total P/L</div>
-                  <div
-                    className="text-sm font-semibold tabular-nums"
-                    style={{ color: Number(p?.total_pl ?? 0) >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}
-                  >
-                    {formatMoney(Number(p?.total_pl ?? 0), currency, true).replace(` ${currency}`, "")}
-                  </div>
-                </div>
               </div>
 
               <div className="mt-5 grid grid-cols-4 gap-2">
