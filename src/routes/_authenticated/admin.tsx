@@ -91,8 +91,12 @@ function AdminPage() {
 function UsersPanel() {
   const q = useAllUsers();
   const upd = useAdminUpdateProfile();
+  const createUser = useServerFn(adminCreateUser);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<{ display_name: string; balance: string; total_pl: string; status: string } | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [newUser, setNewUser] = useState({ first_name: "", last_name: "", email: "", password: "" });
+  const [busy, setBusy] = useState(false);
 
   const openEdit = (u: any) => {
     setEditing(u.id);
@@ -122,6 +126,25 @@ function UsersPanel() {
       toast.error(e.message);
     }
   };
+
+  const submitCreate = async () => {
+    if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
+      return toast.error("All fields are required");
+    }
+    setBusy(true);
+    try {
+      await createUser({ data: newUser });
+      toast.success("User created");
+      setCreating(false);
+      setNewUser({ first_name: "", last_name: "", email: "", password: "" });
+      q.refetch();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
 
   return (
     <div className="space-y-3">
