@@ -49,19 +49,54 @@ export function Dashboard() {
   const p = profile.data;
   const balance = Number(p?.balance ?? 0);
   const currency = p?.currency ?? "USD";
-  const allPositions = (positions.data ?? []).map((pos) => {
+  const realPositions = (positions.data ?? []).map((pos) => {
     const base = Number(pos.current_price);
     const live = pos.status === "open" ? Number((base + drift * 0.3).toFixed(3)) : base;
     const dir = pos.side === "Sell" ? -1 : 1;
     const livePl = pos.status === "open"
       ? Number(pos.pl) + (live - base) * dir * Number(pos.lot) * 100
       : Number(pos.pl);
-    return { ...pos, live_price: live, live_pl: livePl };
+    return { ...pos, live_price: live, live_pl: livePl, is_fake: false as const };
   });
-  const openPositions = allPositions.filter((p) => p.status === "open");
-  const closedPositions = allPositions.filter((p) => p.status === "closed");
+
+  const fakes = useMemo(() => (userId ? generateFakePositions(userId, 22) : []), [userId]);
+  const fakeOpen = fakes.map((f) => {
+    const live = Number((f.base_price + drift * 0.3).toFixed(3));
+    const dir = f.side === "Sell" ? -1 : 1;
+    const live_pl = Number((f.base_pl + (live - f.base_price) * dir * f.lot * 100).toFixed(2));
+    return {
+      id: f.id,
+      symbol: f.symbol,
+      side: f.side,
+      lot: f.lot,
+      open_price: f.open_price,
+      current_price: f.base_price,
+      pl: f.base_pl,
+      status: "open" as const,
+      live_price: live,
+      live_pl,
+      is_fake: true as const,
+    };
+  });
+
+  const openPositions = [...realPositions.filter((x) => x.status === "open"), ...fakeOpen];
+  const closedPositions = realPositions.filter((x) => x.status === "closed");
   const list = tab === "Open" ? openPositions : tab === "Closed" ? closedPositions : [];
   const totalOpenPL = openPositions.reduce((a, p) => a + p.live_pl, 0);
+
+  // Secret admin trigger: 5 rapid taps on "Accounts"
+  const tapCount = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSecretTap = () => {
+    tapCount.current += 1;
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 1200);
+    if (tapCount.current >= 5) {
+      tapCount.current = 0;
+      if (isAdmin.data) nav({ to: "/admin" });
+    }
+  };
+
 
   const submitNew = (side: "Buy" | "Sell", lot: number) => {
     if (!userId || !lot) return;
