@@ -148,9 +148,15 @@ export function Dashboard() {
 
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-[28px] font-bold tracking-tight tabular-nums text-white">
-                  {formatMoney(balance, currency).replace(` ${currency}`, "")}
+                  {formatMoney(balance + totalOpenPL, currency).replace(` ${currency}`, "")}
                 </span>
                 <span className="text-sm text-white/60">{currency}</span>
+              </div>
+              <div className="mt-1 flex items-center gap-3 text-[11px] text-white/60 tabular-nums">
+                <span>Balance {formatMoney(balance, currency).replace(` ${currency}`, "")}</span>
+                <span style={{ color: totalOpenPL >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}>
+                  Floating {formatMoney(totalOpenPL, currency, true).replace(` ${currency}`, "")}
+                </span>
               </div>
 
               <div className="mt-5 grid grid-cols-4 gap-2">
