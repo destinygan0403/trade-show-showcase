@@ -238,10 +238,13 @@ export function Dashboard() {
           currency={currency}
           openPositions={openPositions}
           onNewOrder={() => setOpenModal(true)}
-          onClose={(pos) => closePos.mutate(pos, {
-            onSuccess: () => toast.success("Position closed"),
-            onError: (e: any) => toast.error(e.message),
-          })}
+          onClose={(pos) => {
+            if ((pos as any).is_fake) return;
+            closePos.mutate(pos, {
+              onSuccess: () => toast.success("Position closed"),
+              onError: (e: any) => toast.error(e.message),
+            });
+          }}
         />
       )}
       {navKey === "Insights" && <InsightsView />}
