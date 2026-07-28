@@ -213,8 +213,8 @@ export function Dashboard() {
                     currentPrice={pos.live_price}
                     pl={pos.live_pl}
                     currency={currency}
-                    canClose={pos.status === "open"}
-                    onClose={() => closePos.mutate(pos, {
+                    canClose={pos.status === "open" && !pos.is_fake}
+                    onClose={() => pos.is_fake ? undefined : closePos.mutate(pos, {
                       onSuccess: () => toast.success("Position closed"),
                       onError: (e: any) => toast.error(e.message),
                     })}
