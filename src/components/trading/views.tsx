@@ -289,58 +289,66 @@ export function PerformanceView() {
   );
 }
 
-/* -------------------- PROFILE -------------------- */
+/* -------------------- PROFILE (dedicated page, no account card) -------------------- */
 export function ProfileView({
-  profile, email, isAdmin, onOpenAdmin,
+  profile, email,
 }: {
   profile: Profile | null | undefined;
   email: string;
-  isAdmin: boolean;
-  onOpenAdmin: () => void;
 }) {
   const theme = useTheme();
   const isLight = theme === "light";
-  const rows = [
-    { icon: <Shield size={16} />, label: "Security", value: "2FA enabled" },
-    { icon: <Bell size={16} />, label: "Notifications", value: "On" },
-    { icon: <Lock size={16} />, label: "Change password", value: "" },
-    { icon: <HelpCircle size={16} />, label: "Help & Support", value: "" },
-  ];
   const initials = (profile?.display_name ?? "GH").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
 
+  const accountRows = [
+    { icon: <User size={16} />, label: "Full name", value: profile?.display_name ?? "—" },
+    { icon: <Mail size={16} />, label: "Email", value: email || "—" },
+    { icon: <CreditCard size={16} />, label: "Account ID", value: `#${profile?.account_id ?? "—"}` },
+    { icon: <Globe size={16} />, label: "Base currency", value: profile?.currency ?? "USD" },
+  ];
+  const securityRows = [
+    { icon: <Lock size={16} />, label: "Change password" },
+    { icon: <Fingerprint size={16} />, label: "Biometric login", value: "Off" },
+    { icon: <Shield size={16} />, label: "Two-factor auth", value: "Enabled" },
+    { icon: <Smartphone size={16} />, label: "Trusted devices", value: "1 device" },
+  ];
+  const prefsRows = [
+    { icon: <Bell size={16} />, label: "Notifications", value: "On" },
+    { icon: <Languages size={16} />, label: "Language", value: "English" },
+    { icon: <FileText size={16} />, label: "Statements & reports" },
+  ];
+  const supportRows = [
+    { icon: <HelpCircle size={16} />, label: "Help & Support" },
+    { icon: <Info size={16} />, label: "About", value: "v1.0.0" },
+  ];
+
   return (
-    <section className="px-5 mt-4 space-y-4">
-      <div className="rounded-2xl border border-border/60 bg-surface/60 p-4 flex items-center gap-4">
+    <section className="px-5 pt-6 pb-4 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+      </header>
+
+      <div className="flex flex-col items-center text-center gap-3 pt-2">
         <div
-          className="h-14 w-14 rounded-full grid place-items-center text-lg font-bold text-black"
+          className="h-20 w-20 rounded-full grid place-items-center text-2xl font-bold text-black shadow-lg"
           style={{ background: "linear-gradient(135deg, oklch(0.9 0.17 90), oklch(0.75 0.16 70))" }}
         >
           {initials}
         </div>
-        <div className="min-w-0">
-          <div className="text-base font-semibold text-white truncate">{profile?.display_name ?? "…"}</div>
-          <div className="text-xs text-muted-foreground truncate">{email}</div>
-          <div className="text-[11px] text-muted-foreground">ID #{profile?.account_id ?? "…"}</div>
-          <div className="mt-1 flex gap-1.5">
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-white/80">MT5</span>
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/20 text-primary">Pro</span>
-          </div>
+        <div>
+          <div className="text-lg font-semibold text-white">{profile?.display_name ?? "…"}</div>
+          <div className="text-xs text-muted-foreground">{email}</div>
+        </div>
+        <div className="flex gap-1.5">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white/10 text-white/85">{profile?.status ?? "Real"}</span>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-white/10 text-white/85">MT5</span>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-primary/20 text-primary">Pro</span>
         </div>
       </div>
 
-      {isAdmin && (
-        <button
-          onClick={onOpenAdmin}
-          className="w-full rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2 text-sm text-primary font-semibold">
-            <ShieldCheck size={16} /> Admin Console
-          </div>
-          <ChevronRight size={16} className="text-primary" />
-        </button>
-      )}
+      <Group title="Account">{accountRows.map((r, i) => <Row key={r.label} first={i === 0} {...r} />)}</Group>
 
-      <div className="rounded-2xl border border-border/60 bg-surface/60 overflow-hidden">
+      <div className="rounded-2xl border border-border/60 bg-surface/60">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground">{isLight ? <Sun size={16} /> : <Moon size={16} />}</span>
@@ -350,38 +358,21 @@ export function ProfileView({
             </div>
           </div>
           <div className="inline-flex p-0.5 rounded-full border border-border/60 bg-background/50">
-            <button
-              onClick={() => setTheme("dark")}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
-              style={!isLight ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" } : { color: "var(--muted-foreground)" }}
-            >
+            <button onClick={() => setTheme("dark")} className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
+              style={!isLight ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" } : { color: "var(--muted-foreground)" }}>
               <Moon size={12} /> Dark
             </button>
-            <button
-              onClick={() => setTheme("light")}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
-              style={isLight ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" } : { color: "var(--muted-foreground)" }}
-            >
+            <button onClick={() => setTheme("light")} className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
+              style={isLight ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" } : { color: "var(--muted-foreground)" }}>
               <Sun size={12} /> Light
             </button>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/60 overflow-hidden">
-        {rows.map((r, i) => (
-          <button
-            key={r.label}
-            onClick={() => toast(r.label)}
-            className={`w-full grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3.5 text-left bg-surface/40 ${i > 0 ? "border-t border-border/50" : ""}`}
-          >
-            <span className="text-muted-foreground">{r.icon}</span>
-            <span className="text-sm text-white">{r.label}</span>
-            <span className="text-xs text-muted-foreground">{r.value}</span>
-            <ChevronRight size={14} className="text-muted-foreground" />
-          </button>
-        ))}
-      </div>
+      <Group title="Security">{securityRows.map((r, i) => <Row key={r.label} first={i === 0} {...r} />)}</Group>
+      <Group title="Preferences">{prefsRows.map((r, i) => <Row key={r.label} first={i === 0} {...r} />)}</Group>
+      <Group title="Support">{supportRows.map((r, i) => <Row key={r.label} first={i === 0} {...r} />)}</Group>
 
       <button
         onClick={async () => { await supabase.auth.signOut(); }}
@@ -392,3 +383,27 @@ export function ProfileView({
     </section>
   );
 }
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="px-1 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{title}</div>
+      <div className="rounded-2xl border border-border/60 overflow-hidden bg-surface/40">{children}</div>
+    </div>
+  );
+}
+
+function Row({ icon, label, value, first }: { icon: React.ReactNode; label: string; value?: string; first?: boolean }) {
+  return (
+    <button
+      onClick={() => toast(label)}
+      className={`w-full grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3.5 text-left ${first ? "" : "border-t border-border/50"}`}
+    >
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="text-sm text-white">{label}</span>
+      <span className="text-xs text-muted-foreground truncate max-w-[45vw]">{value ?? ""}</span>
+      <ChevronRight size={14} className="text-muted-foreground" />
+    </button>
+  );
+}
+
