@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { useAppSettings, useRequestTransaction } from "@/lib/data";
+import { useAppSettings, useMyProfile, useRequestTransaction } from "@/lib/data";
 
 type Kind = "deposit" | "withdrawal";
 type Method = "bank_transfer" | "card" | "btc" | "usdt";
