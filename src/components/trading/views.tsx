@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Newspaper, Calendar, Shield, Bell, Lock, HelpCircle, LogOut, ChevronRight,
-  Menu, Plus, ArrowRight, ArrowUpDown, Sun, Moon, ShieldCheck,
+  Menu, Plus, ArrowRight, ArrowUpDown, Sun, Moon,
+  User, Mail, CreditCard, Globe, Languages, FileText, Fingerprint, Smartphone, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
