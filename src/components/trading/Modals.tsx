@@ -99,7 +99,7 @@ export function TransactionModal({
           )}
           {method === "card" && (
             <>
-              <Field label="Card number" value={card.number} onChange={(v) => setCard({ ...card, number: v })} placeholder="4242 4242 4242 4242" />
+              <Field label="Card number" value={card.number} onChange={(v) => setCard({ ...card, number: v })} />
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Expiry" value={card.exp} onChange={(v) => setCard({ ...card, exp: v })} placeholder="12/28" />
                 <Field label="CVC" value={card.cvc} onChange={(v) => setCard({ ...card, cvc: v })} placeholder="123" />
