@@ -123,11 +123,12 @@ export function TransactionModal({
           )}
 
           <button onClick={submit} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
-            Submit request
+            Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            Your request will be reviewed by an admin. You'll be notified once processed.
+            Your {kind} will be processed instantly and your balance updated.
           </p>
+
         </div>
       </div>
     </div>
