@@ -150,7 +150,7 @@ function Input({
   label: string;
   value: string;
   onChange: (v: string) => void;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <div>
       <label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</label>
