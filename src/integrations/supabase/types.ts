@@ -14,16 +14,249 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_settings: {
+        Row: {
+          brand_name: string
+          deposit_bank_beneficiary: string | null
+          deposit_bank_name: string | null
+          deposit_btc_address: string | null
+          deposit_iban: string | null
+          deposit_usdt_address: string | null
+          id: number
+          notification_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_name?: string
+          deposit_bank_beneficiary?: string | null
+          deposit_bank_name?: string | null
+          deposit_btc_address?: string | null
+          deposit_iban?: string | null
+          deposit_usdt_address?: string | null
+          id?: number
+          notification_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string
+          deposit_bank_beneficiary?: string | null
+          deposit_bank_name?: string | null
+          deposit_btc_address?: string | null
+          deposit_iban?: string | null
+          deposit_usdt_address?: string | null
+          id?: number
+          notification_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      positions: {
+        Row: {
+          close_price: number | null
+          closed_at: string | null
+          current_price: number
+          id: string
+          lot: number
+          open_price: number
+          opened_at: string
+          pl: number
+          side: Database["public"]["Enums"]["position_side"]
+          status: Database["public"]["Enums"]["position_status"]
+          symbol: string
+          user_id: string
+          verdict: Database["public"]["Enums"]["position_verdict"]
+          verdict_amount: number | null
+        }
+        Insert: {
+          close_price?: number | null
+          closed_at?: string | null
+          current_price: number
+          id?: string
+          lot: number
+          open_price: number
+          opened_at?: string
+          pl?: number
+          side: Database["public"]["Enums"]["position_side"]
+          status?: Database["public"]["Enums"]["position_status"]
+          symbol?: string
+          user_id: string
+          verdict?: Database["public"]["Enums"]["position_verdict"]
+          verdict_amount?: number | null
+        }
+        Update: {
+          close_price?: number | null
+          closed_at?: string | null
+          current_price?: number
+          id?: string
+          lot?: number
+          open_price?: number
+          opened_at?: string
+          pl?: number
+          side?: Database["public"]["Enums"]["position_side"]
+          status?: Database["public"]["Enums"]["position_status"]
+          symbol?: string
+          user_id?: string
+          verdict?: Database["public"]["Enums"]["position_verdict"]
+          verdict_amount?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_id: string
+          balance: number
+          created_at: string
+          currency: string
+          display_name: string
+          email: string
+          id: string
+          status: string
+          total_pl: number
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string
+          balance?: number
+          created_at?: string
+          currency?: string
+          display_name?: string
+          email: string
+          id: string
+          status?: string
+          total_pl?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          balance?: number
+          created_at?: string
+          currency?: string
+          display_name?: string
+          email?: string
+          id?: string
+          status?: string
+          total_pl?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          card_last4: string | null
+          created_at: string
+          currency: string
+          destination: string | null
+          id: string
+          kind: Database["public"]["Enums"]["tx_kind"]
+          method: Database["public"]["Enums"]["tx_method"]
+          processed_at: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["tx_status"]
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          card_last4?: string | null
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["tx_kind"]
+          method: Database["public"]["Enums"]["tx_method"]
+          processed_at?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["tx_status"]
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          card_last4?: string | null
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["tx_kind"]
+          method?: Database["public"]["Enums"]["tx_method"]
+          processed_at?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["tx_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      position_side: "Buy" | "Sell"
+      position_status: "open" | "closed"
+      position_verdict: "auto" | "force_win" | "force_loss"
+      tx_kind: "deposit" | "withdrawal"
+      tx_method: "bank_transfer" | "card" | "btc" | "usdt"
+      tx_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +383,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      position_side: ["Buy", "Sell"],
+      position_status: ["open", "closed"],
+      position_verdict: ["auto", "force_win", "force_loss"],
+      tx_kind: ["deposit", "withdrawal"],
+      tx_method: ["bank_transfer", "card", "btc", "usdt"],
+      tx_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
