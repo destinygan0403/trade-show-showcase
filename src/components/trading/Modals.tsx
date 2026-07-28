@@ -55,7 +55,7 @@ export function TransactionModal({
         destination: destination || null as any,
         card_last4: method === "card" && card.number ? card.number.slice(-4) : (null as any),
       });
-      toast.success(`${kind === "deposit" ? "Deposit" : "Withdrawal"} request submitted`);
+      toast.success(`${kind === "deposit" ? "Deposit" : "Withdrawal"} of ${amt.toFixed(2)} processed`);
       onClose();
     } catch (e: any) {
       toast.error(e.message);
