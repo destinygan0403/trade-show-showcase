@@ -12,8 +12,9 @@ import {
   LineChart,
   UserCircle2,
   ArrowUpDown,
-  Plus,
+  MoreVertical,
 } from "lucide-react";
+
 import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
