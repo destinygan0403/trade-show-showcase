@@ -148,6 +148,13 @@ function UsersPanel() {
 
   return (
     <div className="space-y-3">
+      <button
+        onClick={() => setCreating(true)}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+      >
+        <UserPlus size={16} /> Create new user
+      </button>
+
       {(q.data ?? []).map((u: any) => (
         <div key={u.id} className="rounded-xl border border-border/60 bg-surface/60 p-4">
           <div className="flex items-center justify-between gap-3">
@@ -183,9 +190,31 @@ function UsersPanel() {
           <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save</button>
         </Modal>
       )}
+
+      {creating && (
+        <Modal onClose={() => setCreating(false)} title="Create user">
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="First name" value={newUser.first_name} onChange={(v) => setNewUser({ ...newUser, first_name: v })} />
+            <TextField label="Last name" value={newUser.last_name} onChange={(v) => setNewUser({ ...newUser, last_name: v })} />
+          </div>
+          <TextField label="Email" value={newUser.email} onChange={(v) => setNewUser({ ...newUser, email: v })} />
+          <TextField label="Password (min 8 chars)" value={newUser.password} onChange={(v) => setNewUser({ ...newUser, password: v })} />
+          <button
+            onClick={submitCreate}
+            disabled={busy}
+            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
+          >
+            {busy ? "Creating…" : "Create user"}
+          </button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            The user will be able to sign in immediately with this email and password.
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }
+
 
 function PositionsPanel() {
   const q = useAllOpenPositions();
