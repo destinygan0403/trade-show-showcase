@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -18,6 +18,7 @@ import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
 import { useClosePosition, useIsAdmin, useMyPositions, useMyProfile, useOpenPosition } from "@/lib/data";
+import { generateFakePositions } from "@/lib/fake-positions";
 import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
 import { TransactionModal, OpenPositionModal } from "./Modals";
 
