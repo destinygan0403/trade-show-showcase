@@ -38,8 +38,12 @@ export function TransactionModal({
   const submit = async () => {
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
-    if (kind === "withdrawal" && (method === "btc" || method === "usdt" || method === "bank_transfer") && !destination) {
-      return toast.error("Enter destination");
+    if (kind === "withdrawal") {
+      const bal = Number(profile.data?.balance ?? 0);
+      if (amt > bal) return toast.error(`Insufficient balance (available ${bal.toFixed(2)})`);
+      if ((method === "btc" || method === "usdt" || method === "bank_transfer") && !destination) {
+        return toast.error("Enter destination");
+      }
     }
     try {
       await req.mutateAsync({
