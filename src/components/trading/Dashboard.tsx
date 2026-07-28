@@ -253,8 +253,6 @@ export function Dashboard() {
         <ProfileView
           profile={p}
           email={user?.email ?? ""}
-          isAdmin={!!isAdmin.data}
-          onOpenAdmin={() => nav({ to: "/admin" })}
         />
       )}
 
