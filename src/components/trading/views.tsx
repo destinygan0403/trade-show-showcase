@@ -1,43 +1,35 @@
 import { useEffect, useState } from "react";
 import {
-  Newspaper,
-  Calendar,
-  Shield,
-  Bell,
-  Lock,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
-  Star,
-  Menu,
-  Plus,
-  ArrowRight,
-  ArrowUpDown,
-  CandlestickChart,
-  Clock,
-  Settings as SettingsIcon,
-  Sun,
-  Moon,
+  Newspaper, Calendar, Shield, Bell, Lock, HelpCircle, LogOut, ChevronRight,
+  Menu, Plus, ArrowRight, ArrowUpDown, Sun, Moon, ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatNumber, useTradingState } from "@/lib/trading-store";
+import { supabase } from "@/integrations/supabase/client";
+import { formatMoney } from "@/lib/format";
 import { useTheme, setTheme } from "@/lib/theme";
-
-
+import type { Position, Profile } from "@/lib/data";
 
 /* -------------------- TRADE (MT5-style) -------------------- */
-export function TradeView({ onNavigate }: { onNavigate?: (key: "Accounts" | "Trade" | "Insights" | "Performance" | "Profile") => void }) {
-  const s = useTradingState();
-  const totalPL = s.positions.reduce((a, p) => a + p.pl, 0);
-  const equity = s.balance + totalPL;
+export function TradeView({
+  balance,
+  currency,
+  openPositions,
+  onNewOrder,
+  onClose,
+}: {
+  balance: number;
+  currency: string;
+  openPositions: (Position & { live_price: number; live_pl: number })[];
+  onNewOrder: () => void;
+  onClose: (p: Position) => void;
+}) {
+  const totalPL = openPositions.reduce((a, p) => a + p.live_pl, 0);
+  const equity = balance + totalPL;
   const freeMargin = equity - Math.abs(totalPL) * 0.02;
-
-  const fmt2 = (n: number) =>
-    n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt2 = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10">
-      {/* Top bar */}
+    <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10 max-w-md mx-auto">
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <button onClick={() => toast("Menu")} className="h-8 w-8 grid place-items-center text-white/70">
           <Menu size={18} />
@@ -46,39 +38,30 @@ export function TradeView({ onNavigate }: { onNavigate?: (key: "Accounts" | "Tra
           className="text-[15px] font-semibold tabular-nums"
           style={{ color: totalPL >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}
         >
-          {totalPL >= 0 ? "" : "-"}{fmt2(Math.abs(totalPL))} USD
+          {totalPL >= 0 ? "" : "-"}{fmt2(Math.abs(totalPL))} {currency}
         </div>
-        <button onClick={() => toast("Nouvel ordre")} className="h-8 w-8 grid place-items-center text-white/70">
+        <button onClick={onNewOrder} className="h-8 w-8 grid place-items-center text-white/70">
           <Plus size={20} />
         </button>
       </div>
 
-      {/* Account summary rows */}
       <div className="px-4 pt-2 pb-3 space-y-1.5">
-        <SummaryRow label="Balance:" value={fmt2(s.balance)} />
+        <SummaryRow label="Balance:" value={fmt2(balance)} />
         <SummaryRow label="Equity:" value={fmt2(equity)} />
         <SummaryRow label="Free Margin:" value={fmt2(freeMargin)} />
       </div>
 
-      {/* Positions header */}
       <div className="flex items-center justify-between px-4 pt-2 pb-2 border-b border-border/40">
         <span className="text-[13px] text-white/80">Positions</span>
-        <button onClick={() => toast("Trier")} className="text-white/50">
-          <ArrowUpDown size={14} />
-        </button>
+        <button className="text-white/50"><ArrowUpDown size={14} /></button>
       </div>
 
-      {/* Positions list */}
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {s.positions.map((p) => (
-          <MtPositionRow
-            key={p.id}
-            side={p.side}
-            lot={p.lot}
-            openPrice={p.openPrice}
-            currentPrice={p.currentPrice}
-            pl={p.pl}
-          />
+        {openPositions.length === 0 && (
+          <div className="p-8 text-center text-sm text-muted-foreground">No open positions</div>
+        )}
+        {openPositions.map((p) => (
+          <MtPositionRow key={p.id} pos={p} onClose={() => onClose(p)} />
         ))}
       </div>
     </section>
@@ -95,83 +78,37 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 function MtPositionRow({
-  side,
-  lot,
-  openPrice,
-  currentPrice,
-  pl,
+  pos, onClose,
 }: {
-  side: "Sell" | "Buy";
-  lot: number;
-  openPrice: number;
-  currentPrice: number;
-  pl: number;
+  pos: Position & { live_price: number; live_pl: number };
+  onClose: () => void;
 }) {
-  const sideColor = side === "Sell" ? "var(--color-loss)" : "var(--color-profit)";
-  const plColor = pl >= 0 ? "var(--color-profit)" : "var(--color-loss)";
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const sideColor = pos.side === "Sell" ? "var(--color-loss)" : "var(--color-profit)";
+  const plColor = pos.live_pl >= 0 ? "var(--color-profit)" : "var(--color-loss)";
+  const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   return (
-    <button className="w-full text-left grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 border-b border-border/40 active:bg-surface/40">
+    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-4 py-3 border-b border-border/40">
       <div className="min-w-0">
         <div className="text-[15px] leading-tight">
           <span className="font-semibold text-white">XAUUSDm </span>
           <span style={{ color: sideColor }} className="font-medium">
-            {side.toLowerCase()} {lot.toFixed(2)}
+            {pos.side.toLowerCase()} {Number(pos.lot).toFixed(2)}
           </span>
         </div>
         <div className="mt-1 flex items-center gap-1.5 text-[13px] text-white/70 tabular-nums">
-          <span>{fmt(openPrice)}</span>
+          <span>{fmt(Number(pos.open_price))}</span>
           <ArrowRight size={12} className="text-white/40" />
-          <span>{fmt(currentPrice)}</span>
+          <span>{fmt(pos.live_price)}</span>
         </div>
       </div>
       <div className="text-right text-[15px] font-semibold tabular-nums" style={{ color: plColor }}>
-        {pl >= 0 ? "" : "-"}
-        {Math.abs(pl).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        {pos.live_pl >= 0 ? "" : "-"}
+        {Math.abs(pos.live_pl).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-    </button>
-  );
-}
-
-function MtTab({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium"
-      style={{ color: active ? "var(--color-loss)" : "var(--muted-foreground)" }}
-    >
-      <span
-        className={active ? "grid place-items-center h-8 w-9 rounded-md" : ""}
-        style={active ? { background: "color-mix(in oklch, var(--color-loss) 18%, transparent)" } : undefined}
-      >
-        {icon}
-      </span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function BarsIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="7" y1="4" x2="7" y2="20" />
-      <line x1="4" y1="8" x2="10" y2="8" />
-      <line x1="4" y1="16" x2="10" y2="16" />
-      <line x1="17" y1="4" x2="17" y2="20" />
-      <line x1="14" y1="8" x2="20" y2="8" />
-      <line x1="14" y1="16" x2="20" y2="16" />
-    </svg>
+      <button onClick={onClose} className="text-[10px] font-semibold px-2 py-1 rounded border border-border/60">
+        Close
+      </button>
+    </div>
   );
 }
 
@@ -197,11 +134,7 @@ export function InsightsView() {
         </h2>
         <div className="rounded-2xl border border-border/60 overflow-hidden">
           {news.map((n, i) => (
-            <button
-              key={i}
-              onClick={() => toast(n.t)}
-              className={`w-full text-left px-4 py-3 bg-surface/40 ${i > 0 ? "border-t border-border/50" : ""}`}
-            >
+            <button key={i} onClick={() => toast(n.t)} className={`w-full text-left px-4 py-3 bg-surface/40 ${i > 0 ? "border-t border-border/50" : ""}`}>
               <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-primary">
                 <span className="px-1.5 py-0.5 rounded bg-primary/15">{n.tag}</span>
                 <span className="text-muted-foreground normal-case tracking-normal font-normal">{n.src} · {n.time}</span>
@@ -245,7 +178,6 @@ export function InsightsView() {
 
 /* -------------------- PERFORMANCE (chart only) -------------------- */
 type Candle = { o: number; h: number; l: number; c: number };
-
 function genCandles(n: number, end: number): Candle[] {
   const arr: Candle[] = [];
   let price = end * 0.98;
@@ -262,16 +194,10 @@ function genCandles(n: number, end: number): Candle[] {
 }
 
 export function PerformanceView() {
-  const s = useTradingState();
   const [tf, setTf] = useState<"M1" | "M5" | "M15" | "M30" | "H1" | "H4" | "D1">("M30");
   const N = 60;
-  const [candles, setCandles] = useState<Candle[]>(() => genCandles(N, s.balance / 1e6 + 1.075));
-
-  useEffect(() => {
-    setCandles(genCandles(N, s.balance / 1e6 + 1.075));
-  }, [tf, s.balance]);
-
-  // live tick — mutate last candle
+  const [candles, setCandles] = useState<Candle[]>(() => genCandles(N, 1.0875));
+  useEffect(() => setCandles(genCandles(N, 1.0875)), [tf]);
   useEffect(() => {
     const id = setInterval(() => {
       setCandles((prev) => {
@@ -283,7 +209,6 @@ export function PerformanceView() {
         last.h = Math.max(last.h, nc);
         last.l = Math.min(last.l, nc);
         next[next.length - 1] = last;
-        // occasionally push a new candle
         if (Math.random() < 0.12) {
           next.shift();
           next.push({ o: nc, h: nc, l: nc, c: nc + (Math.random() - 0.5) * vol });
@@ -297,30 +222,19 @@ export function PerformanceView() {
   const last = candles[candles.length - 1];
   const prev = candles[candles.length - 2] ?? last;
   const up = last.c >= prev.c;
-
   const min = Math.min(...candles.map((c) => c.l));
   const max = Math.max(...candles.map((c) => c.h));
   const pad = (max - min) * 0.15 || 0.001;
-  const yMin = min - pad;
-  const yMax = max + pad;
-  const range = yMax - yMin;
-
-  const W = 340;
-  const H = 380;
-  const rightAxis = 44;
-  const chartW = W - rightAxis;
+  const yMin = min - pad, yMax = max + pad, range = yMax - yMin;
+  const W = 340, H = 380, rightAxis = 44, chartW = W - rightAxis;
   const cw = chartW / candles.length;
   const bodyW = Math.max(2, cw * 0.65);
   const yOf = (v: number) => ((yMax - v) / range) * H;
-
-  const gridLines = 8;
-  const ticks = Array.from({ length: gridLines + 1 }, (_, i) => yMin + (range * i) / gridLines);
-
+  const ticks = Array.from({ length: 9 }, (_, i) => yMin + (range * i) / 8);
 
   return (
-    <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10">
-      {/* Timeframe bar */}
-      <div className="px-3 pt-3 pb-2 flex items-center gap-1 overflow-x-auto no-scrollbar border-b border-border/60">
+    <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10 max-w-md mx-auto">
+      <div className="px-3 pt-3 pb-2 flex items-center gap-1 overflow-x-auto border-b border-border/60">
         {(["M1", "M5", "M15", "M30", "H1", "H4", "D1"] as const).map((r) => (
           <button
             key={r}
@@ -335,11 +249,8 @@ export function PerformanceView() {
         <div className="ml-auto text-[10px] text-muted-foreground">EUR/USD · {tf}</div>
       </div>
 
-      {/* Chart fills remaining space */}
       <div className="flex-1 min-h-0 px-2 py-2">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
-
-          {/* horizontal grid + right axis labels */}
           {ticks.map((t, i) => (
             <g key={i}>
               <line x1="0" x2={chartW} y1={yOf(t)} y2={yOf(t)} stroke="currentColor" strokeOpacity="0.06" />
@@ -348,20 +259,11 @@ export function PerformanceView() {
               </text>
             </g>
           ))}
-          {/* vertical grid */}
-          {[0.25, 0.5, 0.75].map((f) => (
-            <line key={f} x1={chartW * f} x2={chartW * f} y1="0" y2={H} stroke="currentColor" strokeOpacity="0.05" />
-          ))}
-
-          {/* candles */}
           {candles.map((c, i) => {
             const x = i * cw + cw / 2;
             const isUp = c.c >= c.o;
             const col = isUp ? "var(--color-profit)" : "var(--color-loss)";
-            const yO = yOf(c.o);
-            const yC = yOf(c.c);
-            const yH = yOf(c.h);
-            const yL = yOf(c.l);
+            const yO = yOf(c.o), yC = yOf(c.c), yH = yOf(c.h), yL = yOf(c.l);
             const top = Math.min(yO, yC);
             const bh = Math.max(1, Math.abs(yC - yO));
             return (
@@ -371,34 +273,13 @@ export function PerformanceView() {
               </g>
             );
           })}
-
-          {/* current price line */}
-          <line
-            x1="0"
-            x2={chartW}
-            y1={yOf(last.c)}
-            y2={yOf(last.c)}
+          <line x1="0" x2={chartW} y1={yOf(last.c)} y2={yOf(last.c)}
             stroke={up ? "var(--color-profit)" : "var(--color-loss)"}
-            strokeWidth="0.7"
-            strokeDasharray="2 2"
-            strokeOpacity="0.8"
-          />
-          <rect
-            x={chartW}
-            y={yOf(last.c) - 7}
-            width={rightAxis}
-            height="14"
-            fill={up ? "var(--color-profit)" : "var(--color-loss)"}
-          />
-          <text
-            x={chartW + rightAxis / 2}
-            y={yOf(last.c) + 3}
-            fontSize="8.5"
-            fill="white"
-            fontFamily="monospace"
-            textAnchor="middle"
-            fontWeight="700"
-          >
+            strokeWidth="0.7" strokeDasharray="2 2" strokeOpacity="0.8" />
+          <rect x={chartW} y={yOf(last.c) - 7} width={rightAxis} height="14"
+            fill={up ? "var(--color-profit)" : "var(--color-loss)"} />
+          <text x={chartW + rightAxis / 2} y={yOf(last.c) + 3} fontSize="8.5" fill="white"
+            fontFamily="monospace" textAnchor="middle" fontWeight="700">
             {last.c.toFixed(5)}
           </text>
         </svg>
@@ -408,8 +289,14 @@ export function PerformanceView() {
 }
 
 /* -------------------- PROFILE -------------------- */
-export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
-  const s = useTradingState();
+export function ProfileView({
+  profile, email, isAdmin, onOpenAdmin,
+}: {
+  profile: Profile | null | undefined;
+  email: string;
+  isAdmin: boolean;
+  onOpenAdmin: () => void;
+}) {
   const theme = useTheme();
   const isLight = theme === "light";
   const rows = [
@@ -418,20 +305,21 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
     { icon: <Lock size={16} />, label: "Change password", value: "" },
     { icon: <HelpCircle size={16} />, label: "Help & Support", value: "" },
   ];
+  const initials = (profile?.display_name ?? "GH").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+
   return (
     <section className="px-5 mt-4 space-y-4">
-
       <div className="rounded-2xl border border-border/60 bg-surface/60 p-4 flex items-center gap-4">
         <div
           className="h-14 w-14 rounded-full grid place-items-center text-lg font-bold text-black"
           style={{ background: "linear-gradient(135deg, oklch(0.9 0.17 90), oklch(0.75 0.16 70))" }}
-          onDoubleClick={onOpenSecret}
         >
-          GH
+          {initials}
         </div>
         <div className="min-w-0">
-          <div className="text-base font-semibold text-white truncate">{s.accountName}</div>
-          <div className="text-xs text-muted-foreground">ID #{s.accountId} · Verified</div>
+          <div className="text-base font-semibold text-white truncate">{profile?.display_name ?? "…"}</div>
+          <div className="text-xs text-muted-foreground truncate">{email}</div>
+          <div className="text-[11px] text-muted-foreground">ID #{profile?.account_id ?? "…"}</div>
           <div className="mt-1 flex gap-1.5">
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-white/80">MT5</span>
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/20 text-primary">Pro</span>
@@ -439,43 +327,39 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
         </div>
       </div>
 
-      {/* Appearance / theme toggle */}
+      {isAdmin && (
+        <button
+          onClick={onOpenAdmin}
+          className="w-full rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-sm text-primary font-semibold">
+            <ShieldCheck size={16} /> Admin Console
+          </div>
+          <ChevronRight size={16} className="text-primary" />
+        </button>
+      )}
+
       <div className="rounded-2xl border border-border/60 bg-surface/60 overflow-hidden">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">
-              {isLight ? <Sun size={16} /> : <Moon size={16} />}
-            </span>
+            <span className="text-muted-foreground">{isLight ? <Sun size={16} /> : <Moon size={16} />}</span>
             <div>
               <div className="text-sm text-white">Appearance</div>
-              <div className="text-[11px] text-muted-foreground">
-                {isLight ? "Light theme" : "Dark theme"}
-              </div>
+              <div className="text-[11px] text-muted-foreground">{isLight ? "Light theme" : "Dark theme"}</div>
             </div>
           </div>
-          <div
-            className="inline-flex p-0.5 rounded-full border border-border/60 bg-background/50"
-            role="tablist"
-          >
+          <div className="inline-flex p-0.5 rounded-full border border-border/60 bg-background/50">
             <button
               onClick={() => setTheme("dark")}
               className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
-              style={
-                !isLight
-                  ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" }
-                  : { color: "var(--muted-foreground)" }
-              }
+              style={!isLight ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" } : { color: "var(--muted-foreground)" }}
             >
               <Moon size={12} /> Dark
             </button>
             <button
               onClick={() => setTheme("light")}
               className="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition"
-              style={
-                isLight
-                  ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" }
-                  : { color: "var(--muted-foreground)" }
-              }
+              style={isLight ? { background: "var(--color-primary)", color: "var(--color-primary-foreground)" } : { color: "var(--muted-foreground)" }}
             >
               <Sun size={12} /> Light
             </button>
@@ -483,15 +367,12 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
         </div>
       </div>
 
-
       <div className="rounded-2xl border border-border/60 overflow-hidden">
         {rows.map((r, i) => (
           <button
             key={r.label}
             onClick={() => toast(r.label)}
-            className={`w-full grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3.5 text-left bg-surface/40 ${
-              i > 0 ? "border-t border-border/50" : ""
-            }`}
+            className={`w-full grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3.5 text-left bg-surface/40 ${i > 0 ? "border-t border-border/50" : ""}`}
           >
             <span className="text-muted-foreground">{r.icon}</span>
             <span className="text-sm text-white">{r.label}</span>
@@ -502,8 +383,8 @@ export function ProfileView({ onOpenSecret }: { onOpenSecret?: () => void }) {
       </div>
 
       <button
-        onClick={() => toast("Signed out")}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-border/60 bg-surface/40 text-sm font-semibold text-[var(--color-loss)]"
+        onClick={async () => { await supabase.auth.signOut(); }}
+        className="w-full rounded-2xl border border-border/60 bg-surface/40 px-4 py-3.5 flex items-center justify-center gap-2 text-sm text-white/80 hover:bg-surface/60"
       >
         <LogOut size={16} /> Sign out
       </button>
