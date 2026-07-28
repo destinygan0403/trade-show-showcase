@@ -55,7 +55,7 @@ export function TransactionModal({
         destination: destination || null as any,
         card_last4: method === "card" && card.number ? card.number.slice(-4) : (null as any),
       });
-      toast.success(`${kind === "deposit" ? "Deposit" : "Withdrawal"} request submitted`);
+      toast.success(`${kind === "deposit" ? "Deposit" : "Withdrawal"} of ${amt.toFixed(2)} processed`);
       onClose();
     } catch (e: any) {
       toast.error(e.message);
@@ -123,11 +123,12 @@ export function TransactionModal({
           )}
 
           <button onClick={submit} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
-            Submit request
+            Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            Your request will be reviewed by an admin. You'll be notified once processed.
+            Your {kind} will be processed instantly and your balance updated.
           </p>
+
         </div>
       </div>
     </div>

@@ -12,8 +12,9 @@ import {
   LineChart,
   UserCircle2,
   ArrowUpDown,
-  Plus,
+  MoreVertical,
 } from "lucide-react";
+
 import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
@@ -134,29 +135,41 @@ export function Dashboard() {
               className="relative rounded-3xl border border-border/60 p-5 shadow-xl shadow-black/30 overflow-hidden"
               style={{ background: "var(--card-gradient)" }}
             >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="truncate font-semibold text-white/95">{p?.display_name ?? "…"}</span>
-                  <span className="text-white/50 text-xs"># {p?.account_id ?? "…"}</span>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="truncate font-semibold text-white/95">{p?.display_name ?? "…"}</span>
+                    <span className="text-white/50 text-xs"># {p?.account_id ?? "…"}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Tag>{p?.status ?? "Real"}</Tag>
+                    <Tag>MT5</Tag>
+                    <Tag accent>Pro</Tag>
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Tag>{p?.status ?? "Real"}</Tag>
-                  <Tag>MT5</Tag>
-                  <Tag accent>Pro</Tag>
-                </div>
+                <button className="p-1 -m-1 text-white/70 hover:text-white shrink-0" aria-label="Account menu">
+                  <MoreVertical size={18} />
+                </button>
               </div>
 
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-[28px] font-bold tracking-tight tabular-nums text-white">
-                  {formatMoney(balance + totalOpenPL, currency).replace(` ${currency}`, "")}
-                </span>
-                <span className="text-sm text-white/60">{currency}</span>
-              </div>
-              <div className="mt-1 flex items-center gap-3 text-[11px] text-white/60 tabular-nums">
-                <span>Balance {formatMoney(balance, currency).replace(` ${currency}`, "")}</span>
-                <span style={{ color: totalOpenPL >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}>
-                  Floating {formatMoney(totalOpenPL, currency, true).replace(` ${currency}`, "")}
-                </span>
+              <div className="mt-4 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[26px] font-bold tracking-tight tabular-nums text-white truncate">
+                      {formatMoney(balance, currency).replace(` ${currency}`, "")}
+                    </span>
+                    <span className="text-sm text-white/60">{currency}</span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[10px] uppercase tracking-wider text-white/50">Total P/L</div>
+                  <div
+                    className="text-sm font-semibold tabular-nums"
+                    style={{ color: Number(p?.total_pl ?? 0) >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}
+                  >
+                    {formatMoney(Number(p?.total_pl ?? 0), currency, true).replace(` ${currency}`, "")}
+                  </div>
+                </div>
               </div>
 
               <div className="mt-5 grid grid-cols-4 gap-2">
@@ -167,6 +180,7 @@ export function Dashboard() {
               </div>
             </div>
           </section>
+
         </>
       )}
 
