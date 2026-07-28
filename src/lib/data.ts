@@ -171,6 +171,8 @@ export function useClosePosition() {
   });
 }
 
+import { submitTransaction } from "./transactions.functions";
+
 export function useRequestTransaction() {
   const qc = useQueryClient();
   return useMutation({
@@ -183,20 +185,25 @@ export function useRequestTransaction() {
       destination?: string;
       card_last4?: string;
     }) => {
-      const { error } = await supabase.from("transactions").insert({
-        user_id: input.userId,
-        kind: input.kind,
-        method: input.method,
-        amount: input.amount,
-        reference: input.reference ?? null,
-        destination: input.destination ?? null,
-        card_last4: input.card_last4 ?? null,
+      await submitTransaction({
+        data: {
+          kind: input.kind,
+          method: input.method,
+          amount: input.amount,
+          reference: input.reference,
+          destination: input.destination,
+          card_last4: input.card_last4,
+        },
       });
-      if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tx"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tx"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 }
+
 
 // ---------------- Admin mutations ----------------
 
