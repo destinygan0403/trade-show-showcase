@@ -23,6 +23,7 @@ export function TransactionModal({
   const [destination, setDestination] = useState("");
   const [card, setCard] = useState({ number: "", exp: "", cvc: "" });
   const settings = useAppSettings();
+  const profile = useMyProfile(userId);
   const req = useRequestTransaction();
 
   if (!open) return null;
