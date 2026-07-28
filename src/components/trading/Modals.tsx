@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { useAppSettings, useRequestTransaction } from "@/lib/data";
+import { useAppSettings, useMyProfile, useRequestTransaction } from "@/lib/data";
 
 type Kind = "deposit" | "withdrawal";
 type Method = "bank_transfer" | "card" | "btc" | "usdt";
@@ -23,6 +23,7 @@ export function TransactionModal({
   const [destination, setDestination] = useState("");
   const [card, setCard] = useState({ number: "", exp: "", cvc: "" });
   const settings = useAppSettings();
+  const profile = useMyProfile(userId);
   const req = useRequestTransaction();
 
   if (!open) return null;
@@ -37,8 +38,12 @@ export function TransactionModal({
   const submit = async () => {
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
-    if (kind === "withdrawal" && (method === "btc" || method === "usdt" || method === "bank_transfer") && !destination) {
-      return toast.error("Enter destination");
+    if (kind === "withdrawal") {
+      const bal = Number(profile.data?.balance ?? 0);
+      if (amt > bal) return toast.error(`Insufficient balance (available ${bal.toFixed(2)})`);
+      if ((method === "btc" || method === "usdt" || method === "bank_transfer") && !destination) {
+        return toast.error("Enter destination");
+      }
     }
     try {
       await req.mutateAsync({
@@ -99,7 +104,7 @@ export function TransactionModal({
           )}
           {method === "card" && (
             <>
-              <Field label="Card number" value={card.number} onChange={(v) => setCard({ ...card, number: v })} placeholder="4242 4242 4242 4242" />
+              <Field label="Card number" value={card.number} onChange={(v) => setCard({ ...card, number: v })} />
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Expiry" value={card.exp} onChange={(v) => setCard({ ...card, exp: v })} placeholder="12/28" />
                 <Field label="CVC" value={card.cvc} onChange={(v) => setCard({ ...card, cvc: v })} placeholder="123" />
