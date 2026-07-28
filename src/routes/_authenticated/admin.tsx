@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast, Toaster } from "sonner";
-import { ArrowLeft, Check, X, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, X, ShieldCheck, UserPlus } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { formatMoney } from "@/lib/format";
+import { adminCreateUser } from "@/lib/admin.functions";
 import {
   useAllOpenPositions,
   useAllTransactions,
