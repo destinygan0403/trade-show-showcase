@@ -206,7 +206,15 @@ export function Dashboard() {
           {list.length > 0 ? (
             <section className="mt-4">
               <div className="flex items-center justify-between px-5 pb-2">
-                <span className="text-xs text-muted-foreground">Total P/L:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Total P/L:</span>
+                  <span
+                    className="text-sm font-semibold tabular-nums"
+                    style={{ color: Number(p?.total_pl ?? 0) >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}
+                  >
+                    {formatMoney(Number(p?.total_pl ?? 0), currency, true)}
+                  </span>
+                </div>
                 <button className="text-muted-foreground p-1 rounded-md hover:bg-surface-2/60"><ArrowUpDown size={14} /></button>
               </div>
 
