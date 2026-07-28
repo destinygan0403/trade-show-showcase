@@ -114,10 +114,10 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
-      {navKey !== "Performance" && navKey !== "Trade" && (
+      {navKey !== "Performance" && navKey !== "Trade" && navKey !== "Profile" && (
         <>
           <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
-            <h1 className="text-3xl font-bold tracking-tight truncate">Accounts</h1>
+            <h1 onClick={onSecretTap} className="text-3xl font-bold tracking-tight truncate select-none cursor-default">Accounts</h1>
             <div className="flex items-center gap-2 shrink-0">
               <IconBtn onClick={() => toast("No new notifications")}>
                 <Bell size={18} />
@@ -127,6 +127,7 @@ export function Dashboard() {
               </IconBtn>
             </div>
           </header>
+
 
           <section className="px-5">
             <div
