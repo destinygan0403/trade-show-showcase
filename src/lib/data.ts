@@ -118,20 +118,14 @@ export function useAllOpenPositions() {
 
 // ---------------- Mutations ----------------
 
+import { openPosition, closePosition } from "./positions.functions";
+
 export function useOpenPosition() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { userId: string; side: "Buy" | "Sell"; lot: number }) => {
-      // simulate a price around current gold
       const openPrice = Number((4046 + (Math.random() - 0.5) * 6).toFixed(3));
-      const { error } = await supabase.from("positions").insert({
-        user_id: input.userId,
-        side: input.side,
-        lot: input.lot,
-        open_price: openPrice,
-        current_price: openPrice,
-      });
-      if (error) throw error;
+      await openPosition({ data: { side: input.side, lot: input.lot, open_price: openPrice } });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["positions"] }),
   });
@@ -141,28 +135,7 @@ export function useClosePosition() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (position: Position) => {
-      // Compute close price + p/l based on verdict
-      let pl = position.pl;
-      let closePrice = position.current_price;
-      if (position.verdict === "force_win") {
-        pl = Math.abs(Number(position.verdict_amount ?? 5000));
-      } else if (position.verdict === "force_loss") {
-        pl = -Math.abs(Number(position.verdict_amount ?? 5000));
-      }
-      const { error } = await supabase
-        .from("positions")
-        .update({ status: "closed", closed_at: new Date().toISOString(), close_price: closePrice, pl })
-        .eq("id", position.id);
-      if (error) throw error;
-
-      // Credit user balance
-      const { data: prof } = await supabase.from("profiles").select("balance,total_pl").eq("id", position.user_id).maybeSingle();
-      if (prof) {
-        await supabase
-          .from("profiles")
-          .update({ balance: Number(prof.balance) + pl, total_pl: Number(prof.total_pl) + pl })
-          .eq("id", position.user_id);
-      }
+      await closePosition({ data: { positionId: position.id } });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["positions"] });
