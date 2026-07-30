@@ -86,21 +86,30 @@ export async function sendTransactionalEmail(opts: {
   adminEmail?: string | null;
 }) {
   try {
-    const transporter = getTransporter();
-    const from = process.env.SMTP_FROM ?? `OTC Broker <${process.env.SMTP_USER}>`;
-    const bcc = opts.adminEmail && opts.adminEmail !== opts.to ? opts.adminEmail : undefined;
-    await transporter.sendMail({
-      from,
-      to: opts.to,
-      bcc,
-      subject: opts.subject,
-      html: renderHtml(opts.payload),
-      text: renderText(opts.payload),
+    const url = `${process.env.SUPABASE_URL}/functions/v1/send-mail`;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const cc = opts.adminEmail && opts.adminEmail !== opts.to ? opts.adminEmail : undefined;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        to: opts.to,
+        cc,
+        subject: opts.subject,
+        html: renderHtml(opts.payload),
+        text: renderText(opts.payload),
+      }),
     });
+    if (!res.ok) console.error("[email] relay error:", res.status, await res.text());
   } catch (err) {
     // Never let email failure break the underlying business flow.
     console.error("[email] send failed:", err);
   }
+
 }
 
 export async function getAdminNotificationEmail(): Promise<string | null> {
