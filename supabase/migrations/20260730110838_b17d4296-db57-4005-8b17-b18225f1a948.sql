@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET notification_email = 'vvisenoreply@gmail.com' WHERE id = 1;
