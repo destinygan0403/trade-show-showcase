@@ -1,26 +1,7 @@
 // Server-only email helper. Loaded lazily inside server-function handlers.
-// Sends transactional emails via Hostinger SMTP (nodemailer) with a
-// pro OTC-broker-style HTML template.
+// The app runtime cannot open raw SMTP sockets, so sending is delegated to the
+// `send-mail` backend function which talks to Hostinger SMTP.
 
-import nodemailer from "nodemailer";
-
-let _transporter: nodemailer.Transporter | null = null;
-
-function getTransporter() {
-  if (_transporter) return _transporter;
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT ?? 465);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
-  if (!host || !user || !pass) throw new Error("SMTP not configured");
-  _transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
-  return _transporter;
-}
 
 export type MailRow = { label: string; value: string; accent?: "profit" | "loss" | "neutral" };
 
