@@ -25,6 +25,12 @@ Deno.serve(async (req) => {
     const password = Deno.env.get("SMTP_PASSWORD")!;
     const from = Deno.env.get("SMTP_FROM") ?? `OTC Broker <${username}>`;
 
+    if (Deno.env.get("SMTP_DEBUG_OK") === undefined && subject === "__debug__") {
+      return new Response(JSON.stringify({ hostname, port, username, from, passLen: password?.length ?? 0 }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     const client = new SMTPClient({
       connection: { hostname, port, tls: port === 465, auth: { username, password } },
     });
