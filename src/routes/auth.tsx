@@ -7,10 +7,10 @@ import { useSession } from "@/lib/session";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — GOLD HOLDINGS" },
-      { name: "description", content: "Sign in or create your GOLD HOLDINGS trading account." },
-      { property: "og:title", content: "Sign in — GOLD HOLDINGS" },
-      { property: "og:description", content: "Sign in or create your GOLD HOLDINGS trading account." },
+      { title: "Sign in — OTC BROKER" },
+      { name: "description", content: "Sign in or create your OTC BROKER trading account." },
+      { property: "og:title", content: "Sign in — OTC BROKER" },
+      { property: "og:description", content: "Sign in or create your OTC BROKER trading account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -74,11 +74,9 @@ function AuthPage() {
           <div
             className="mx-auto h-16 w-16 rounded-2xl grid place-items-center text-black font-black text-xl"
             style={{ background: "linear-gradient(135deg, oklch(0.9 0.17 90), oklch(0.75 0.16 70))" }}
-          >
-            GH
-          </div>
-          <h1 className="mt-4 text-2xl font-bold">GOLD HOLDINGS</h1>
-          <p className="text-sm text-muted-foreground">Professional gold trading terminal</p>
+          >OB</div>
+          <h1 className="mt-4 text-2xl font-bold">OTC BROKER</h1>
+          <p className="text-sm text-muted-foreground">Global trading services</p>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-xl">
