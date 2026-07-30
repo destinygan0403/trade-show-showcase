@@ -23,7 +23,8 @@ Deno.serve(async (req) => {
     const port = Number(Deno.env.get("SMTP_PORT") ?? "465");
     const username = Deno.env.get("SMTP_USER")!;
     const password = Deno.env.get("SMTP_PASSWORD")!;
-    const from = Deno.env.get("SMTP_FROM") ?? `OTC Broker <${username}>`;
+    // The SMTP server only allows sending as the authenticated mailbox.
+    const from = `OTC Broker <${username}>`;
 
     const client = new SMTPClient({
       connection: { hostname, port, tls: port === 465, auth: { username, password } },
