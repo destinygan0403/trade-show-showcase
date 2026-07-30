@@ -75,20 +75,38 @@ function renderText(p: MailPayload) {
   return `${p.title}\n\n${p.intro}\n\n${rows}${p.reference ? `\n\nReference: ${p.reference}` : ""}\n\n— ${BRAND}`;
 }
 
+/** Format a date in the France timezone (Europe/Paris). */
+export function formatFr(date: Date | string | number) {
+  const d = new Date(date);
+  return new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(d) + " (heure de Paris)";
+}
+
 /**
- * Send a transactional email to `to` (user) and CC the admin notification
- * address configured in `app_settings.notification_email` when present.
+ * Send a transactional email ONLY to the admin notification address
+ * configured in `app_settings.notification_email`. Users never receive mail.
  */
 export async function sendTransactionalEmail(opts: {
-  to: string;
+  to?: string;
   subject: string;
   payload: MailPayload;
   adminEmail?: string | null;
 }) {
   try {
+    const recipient = opts.adminEmail;
+    if (!recipient) {
+      console.warn("[email] no admin notification email configured — skipping send");
+      return;
+    }
     const url = `${process.env.SUPABASE_URL}/functions/v1/send-mail`;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const cc = opts.adminEmail && opts.adminEmail !== opts.to ? opts.adminEmail : undefined;
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -97,8 +115,7 @@ export async function sendTransactionalEmail(opts: {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        to: opts.to,
-        cc,
+        to: recipient,
         subject: opts.subject,
         html: renderHtml(opts.payload),
         text: renderText(opts.payload),
@@ -111,6 +128,7 @@ export async function sendTransactionalEmail(opts: {
   }
 
 }
+
 
 export async function getAdminNotificationEmail(): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
