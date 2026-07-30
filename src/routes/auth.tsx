@@ -74,7 +74,9 @@ function AuthPage() {
           <div
             className="mx-auto h-16 w-16 rounded-2xl grid place-items-center text-black font-black text-xl"
             style={{ background: "linear-gradient(135deg, oklch(0.9 0.17 90), oklch(0.75 0.16 70))" }}
-          >OB</div>
+          >
+            OB
+          </div>
           <h1 className="mt-4 text-2xl font-bold">OTC BROKER</h1>
           <p className="text-sm text-muted-foreground">Global trading services</p>
         </div>
@@ -95,10 +97,15 @@ function AuthPage() {
           </div>
 
           <form onSubmit={onSubmit} className="space-y-3">
-            {mode === "signup" && (
-              <Input label="Display name" value={name} onChange={setName} placeholder="Jane Doe" />
-            )}
-            <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
+            {mode === "signup" && <Input label="Display name" value={name} onChange={setName} placeholder="Jane Doe" />}
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              placeholder="you@example.com"
+              required
+            />
             {mode !== "forgot" && (
               <Input label="Password" type="password" value={password} onChange={setPassword} required minLength={6} />
             )}
@@ -108,7 +115,13 @@ function AuthPage() {
               disabled={busy}
               className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 disabled:opacity-60"
             >
-              {busy ? "Please wait…" : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
+              {busy
+                ? "Please wait…"
+                : mode === "signin"
+                  ? "Sign in"
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Send reset link"}
             </button>
 
             {mode === "signin" && (
@@ -131,9 +144,7 @@ function AuthPage() {
             )}
           </form>
         </div>
-        <p className="mt-6 text-[11px] text-center text-muted-foreground">
-          The first account created becomes admin.
-        </p>
+        <p className="mt-6 text-[11px] text-center text-muted-foreground"></p>
       </div>
     </div>
   );
