@@ -76,7 +76,8 @@ function renderText(p: MailPayload) {
 }
 
 /** Format a date in the France timezone (Europe/Paris). */
-x  const d = new Date(date);
+export function formatFr(date?: Date | string | number) {
+  const d = date === undefined ? new Date() : new Date(date);
   return new Intl.DateTimeFormat("fr-FR", {
     timeZone: "Europe/Paris",
     day: "2-digit",
