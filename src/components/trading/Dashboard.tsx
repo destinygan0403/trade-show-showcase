@@ -232,9 +232,9 @@ export function Dashboard() {
           currency={currency}
           openPositions={openPositions}
           onNewOrder={() => setOpenModal(true)}
+          onCloseAll={closeAll}
           onClose={(pos) => {
-            if ((pos as any).is_fake) return;
-            closePos.mutate(pos, {
+            closePos.mutate(pos as any, {
               onSuccess: () => toast.success("Position closed"),
               onError: (e: any) => toast.error(e.message),
             });
