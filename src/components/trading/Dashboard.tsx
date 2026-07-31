@@ -105,6 +105,15 @@ export function Dashboard() {
     });
   };
 
+  const closeAll = () => {
+    const open = (positions.data ?? []).filter((x) => x.status === "open");
+    if (open.length === 0) return toast("No open positions");
+    open.forEach((pos) =>
+      closePos.mutate(pos, { onError: (e: any) => toast.error(e.message) }),
+    );
+    toast.success(`Closing ${open.length} position${open.length > 1 ? "s" : ""}`);
+  };
+
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
       {navKey !== "Performance" && navKey !== "Trade" && navKey !== "Profile" && (
