@@ -60,36 +60,11 @@ export function Dashboard() {
     return { ...pos, live_price: live, live_pl: livePl, is_fake: false as const };
   });
 
-  const fakes = useMemo(() => (userId ? generateFakePositions(userId, 22) : []), [userId]);
-  const fakeOpen = fakes.map((f) => {
-    const live = Number((f.base_price + drift * 0.3).toFixed(3));
-    const dir = f.side === "Sell" ? -1 : 1;
-    const live_pl = Number((f.base_pl + (live - f.base_price) * dir * f.lot * 100).toFixed(2));
-    return {
-      id: f.id,
-      user_id: userId ?? "",
-      symbol: f.symbol,
-      side: f.side,
-      lot: f.lot,
-      open_price: f.open_price,
-      current_price: f.base_price,
-      close_price: null,
-      pl: f.base_pl,
-      status: "open" as const,
-      verdict: "auto" as const,
-      verdict_amount: null,
-      opened_at: f.opened_at,
-      closed_at: null,
-      live_price: live,
-      live_pl,
-      is_fake: true as const,
-    };
-  });
-
-  const openPositions = [...realPositions.filter((x) => x.status === "open"), ...fakeOpen];
+  const openPositions = realPositions.filter((x) => x.status === "open");
   const closedPositions = realPositions.filter((x) => x.status === "closed");
   const list = tab === "Open" ? openPositions : tab === "Closed" ? closedPositions : [];
   const totalOpenPL = openPositions.reduce((a, p) => a + p.live_pl, 0);
+
 
   // Secret admin trigger: 5 rapid taps on "Accounts"
   const tapCount = useRef(0);
