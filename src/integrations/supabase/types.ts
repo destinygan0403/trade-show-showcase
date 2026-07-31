@@ -17,6 +17,9 @@ export type Database = {
       app_settings: {
         Row: {
           brand_name: string
+          broker_address: string
+          broker_qr_url: string
+          broker_topup_enabled: boolean
           deposit_bank_beneficiary: string | null
           deposit_bank_name: string | null
           deposit_btc_address: string | null
@@ -28,6 +31,9 @@ export type Database = {
         }
         Insert: {
           brand_name?: string
+          broker_address?: string
+          broker_qr_url?: string
+          broker_topup_enabled?: boolean
           deposit_bank_beneficiary?: string | null
           deposit_bank_name?: string | null
           deposit_btc_address?: string | null
@@ -39,6 +45,9 @@ export type Database = {
         }
         Update: {
           brand_name?: string
+          broker_address?: string
+          broker_qr_url?: string
+          broker_topup_enabled?: boolean
           deposit_bank_beneficiary?: string | null
           deposit_bank_name?: string | null
           deposit_btc_address?: string | null
