@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -13,17 +13,27 @@ import {
   UserCircle2,
   ArrowUpDown,
   MoreVertical,
+  X,
 } from "lucide-react";
 
 import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
-import { useClosePosition, useIsAdmin, useMyPositions, useMyProfile, useOpenPosition } from "@/lib/data";
-import { generateFakePositions } from "@/lib/fake-positions";
+import {
+  useAppSettings,
+  useClosePosition,
+  useIsAdmin,
+  useMyPositions,
+  useMyProfile,
+  useMyTransactions,
+  useOpenPosition,
+  type Transaction,
+} from "@/lib/data";
 import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
-import { TransactionModal, OpenPositionModal } from "./Modals";
+import { TransactionModal, OpenPositionModal, BrokerTopUpModal } from "./Modals";
 
 type NavKey = "Accounts" | "Trade" | "Insights" | "Performance" | "Profile";
+type Tab = "Open" | "Pending" | "Closed" | "History";
 
 export function Dashboard() {
   const { user } = useSession();
@@ -34,11 +44,17 @@ export function Dashboard() {
   const isAdmin = useIsAdmin(userId);
   const openPos = useOpenPosition();
   const closePos = useClosePosition();
+  const settings = useAppSettings();
+  const transactions = useMyTransactions(userId);
+  const history = transactions.data ?? [];
+  const brokerRequired = !!settings.data?.broker_topup_enabled;
 
-  const [tab, setTab] = useState<"Open" | "Pending" | "Closed">("Open");
+  const [tab, setTab] = useState<Tab>("Open");
   const [navKey, setNavKey] = useState<NavKey>("Accounts");
   const [txModal, setTxModal] = useState<null | "deposit" | "withdrawal">(null);
   const [openModal, setOpenModal] = useState(false);
+  const [brokerModal, setBrokerModal] = useState(false);
+  const [txDetail, setTxDetail] = useState<Transaction | null>(null);
 
   // Client-side live drift on current_price for visual pop only.
   const [drift, setDrift] = useState(0);
@@ -46,6 +62,7 @@ export function Dashboard() {
     const id = setInterval(() => setDrift((d) => d + (Math.random() - 0.5) * 0.4), 1200);
     return () => clearInterval(id);
   }, []);
+
 
   const p = profile.data;
   const balance = Number(p?.balance ?? 0);
@@ -60,36 +77,11 @@ export function Dashboard() {
     return { ...pos, live_price: live, live_pl: livePl, is_fake: false as const };
   });
 
-  const fakes = useMemo(() => (userId ? generateFakePositions(userId, 22) : []), [userId]);
-  const fakeOpen = fakes.map((f) => {
-    const live = Number((f.base_price + drift * 0.3).toFixed(3));
-    const dir = f.side === "Sell" ? -1 : 1;
-    const live_pl = Number((f.base_pl + (live - f.base_price) * dir * f.lot * 100).toFixed(2));
-    return {
-      id: f.id,
-      user_id: userId ?? "",
-      symbol: f.symbol,
-      side: f.side,
-      lot: f.lot,
-      open_price: f.open_price,
-      current_price: f.base_price,
-      close_price: null,
-      pl: f.base_pl,
-      status: "open" as const,
-      verdict: "auto" as const,
-      verdict_amount: null,
-      opened_at: f.opened_at,
-      closed_at: null,
-      live_price: live,
-      live_pl,
-      is_fake: true as const,
-    };
-  });
-
-  const openPositions = [...realPositions.filter((x) => x.status === "open"), ...fakeOpen];
+  const openPositions = realPositions.filter((x) => x.status === "open");
   const closedPositions = realPositions.filter((x) => x.status === "closed");
   const list = tab === "Open" ? openPositions : tab === "Closed" ? closedPositions : [];
   const totalOpenPL = openPositions.reduce((a, p) => a + p.live_pl, 0);
+
 
   // Secret admin trigger: 5 rapid taps on "Accounts"
   const tapCount = useRef(0);
@@ -111,6 +103,15 @@ export function Dashboard() {
       onSuccess: () => toast.success(`${side} ${lot.toFixed(2)} lot opened`),
       onError: (e: any) => toast.error(e.message),
     });
+  };
+
+  const closeAll = () => {
+    const open = (positions.data ?? []).filter((x) => x.status === "open");
+    if (open.length === 0) return toast("No open positions");
+    open.forEach((pos) =>
+      closePos.mutate(pos, { onError: (e: any) => toast.error(e.message) }),
+    );
+    toast.success(`Closing ${open.length} position${open.length > 1 ? "s" : ""}`);
   };
 
   return (
@@ -165,8 +166,12 @@ export function Dashboard() {
 
               <div className="mt-5 grid grid-cols-4 gap-2">
                 <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => setOpenModal(true)} />
-                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => setTxModal("deposit")} />
-                <Action icon={<ArrowUpFromLine size={18} />} label="Withdraw" onClick={() => setTxModal("withdrawal")} />
+                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => setBrokerModal(true)} />
+                <Action
+                  icon={<ArrowUpFromLine size={18} />}
+                  label="Withdraw"
+                  onClick={() => (brokerRequired ? setBrokerModal(true) : setTxModal("withdrawal"))}
+                />
                 <Action icon={<ArrowLeftRight size={18} />} label="Transfer" onClick={() => toast("Contact admin")} />
               </div>
             </div>
@@ -179,9 +184,13 @@ export function Dashboard() {
         <>
           <nav className="px-5 mt-6">
             <div className="flex items-center gap-1 border-b border-border/60">
-              {(["Open", "Pending", "Closed"] as const).map((t) => {
+              {(["Open", "Pending", "Closed", "History"] as const).map((t) => {
                 const active = tab === t;
-                const count = t === "Open" ? openPositions.length : t === "Closed" ? closedPositions.length : 0;
+                const count =
+                  t === "Open" ? openPositions.length
+                  : t === "Closed" ? closedPositions.length
+                  : t === "History" ? history.length
+                  : 0;
                 return (
                   <button
                     key={t}
@@ -203,7 +212,37 @@ export function Dashboard() {
             </div>
           </nav>
 
-          {list.length > 0 ? (
+          {tab === "History" ? (
+            history.length > 0 ? (
+              <section className="mt-4 border-t border-border/60">
+                {history.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTxDetail(t)}
+                    className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 border-b border-border/60 bg-surface/30"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-white capitalize">{t.kind}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {t.method.replace("_", " ")} · {new Date(t.created_at).toLocaleString("fr-FR")}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 tabular-nums">
+                      <div
+                        className="text-sm font-semibold"
+                        style={{ color: t.kind === "deposit" ? "var(--color-profit)" : "var(--color-loss)" }}
+                      >
+                        {t.kind === "deposit" ? "+" : "-"}{formatMoney(Number(t.amount), t.currency)}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground capitalize">{t.status}</div>
+                    </div>
+                  </button>
+                ))}
+              </section>
+            ) : (
+              <section className="px-5 mt-4" />
+            )
+          ) : list.length > 0 ? (
             <section className="mt-4">
               <div className="flex items-center justify-between px-5 pb-2">
                 <div className="flex items-center gap-2">
@@ -232,8 +271,8 @@ export function Dashboard() {
                     currentPrice={pos.live_price}
                     pl={pos.live_pl}
                     currency={currency}
-                    canClose={pos.status === "open" && !pos.is_fake}
-                    onClose={() => pos.is_fake ? undefined : closePos.mutate(pos, {
+                    canClose={pos.status === "open"}
+                    onClose={() => closePos.mutate(pos, {
                       onSuccess: () => toast.success("Position closed"),
                       onError: (e: any) => toast.error(e.message),
                     })}
@@ -257,9 +296,9 @@ export function Dashboard() {
           currency={currency}
           openPositions={openPositions}
           onNewOrder={() => setOpenModal(true)}
+          onCloseAll={closeAll}
           onClose={(pos) => {
-            if ((pos as any).is_fake) return;
-            closePos.mutate(pos, {
+            closePos.mutate(pos as any, {
               onSuccess: () => toast.success("Position closed"),
               onError: (e: any) => toast.error(e.message),
             });
@@ -296,6 +335,8 @@ export function Dashboard() {
       </nav>
 
       <TransactionModal open={!!txModal} onClose={() => setTxModal(null)} kind={txModal ?? "deposit"} userId={userId!} />
+      <BrokerTopUpModal open={brokerModal} onClose={() => setBrokerModal(false)} />
+      {txDetail && <TxDetailModal tx={txDetail} onClose={() => setTxDetail(null)} />}
       <OpenPositionModal open={openModal} onClose={() => setOpenModal(false)} onSubmit={submitNew} />
       <Toaster position="top-center" theme="dark" />
     </div>
@@ -428,6 +469,40 @@ function XauLogo() {
         <rect x="11.5" y="23" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
         <rect x="9.25" y="18.5" width="3.5" height="3.5" rx="0.4" fill="#B8860B" />
       </svg>
+    </div>
+  );
+}
+
+function TxDetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const rows: [string, string][] = [
+    ["Type", tx.kind === "deposit" ? "Deposit" : "Withdrawal"],
+    ["Amount", formatMoney(Number(tx.amount), tx.currency)],
+    ["Method", tx.method.replace("_", " ")],
+    ["Status", tx.status],
+    ["Date", new Date(tx.created_at).toLocaleString("fr-FR")],
+    ...(tx.processed_at ? ([["Processed", new Date(tx.processed_at).toLocaleString("fr-FR")]] as [string, string][]) : []),
+    ...(tx.destination ? ([["Destination", tx.destination]] as [string, string][]) : []),
+    ...(tx.card_last4 ? ([["Card", `•••• ${tx.card_last4}`]] as [string, string][]) : []),
+    ...(tx.reference ? ([["Reference", tx.reference]] as [string, string][]) : []),
+    ...(tx.admin_note ? ([["Note", tx.admin_note]] as [string, string][]) : []),
+    ["Transaction ID", tx.id],
+  ];
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+      <div className="w-full sm:max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Transaction details</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
+        </div>
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          {rows.map(([k, v], i) => (
+            <div key={k} className={`flex items-start justify-between gap-3 px-4 py-2.5 text-sm ${i > 0 ? "border-t border-border/50" : ""}`}>
+              <span className="text-muted-foreground">{k}</span>
+              <span className="text-right break-all capitalize">{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

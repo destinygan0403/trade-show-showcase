@@ -344,7 +344,7 @@ function SettingsPanel() {
   const current = form ?? q.data;
   if (!current) return <div className="text-sm text-muted-foreground">Loading…</div>;
 
-  const set = (k: string, v: string) => setForm({ ...current, [k]: v });
+  const set = (k: string, v: string | boolean) => setForm({ ...current, [k]: v });
 
   const save = async () => {
     try {
@@ -358,6 +358,22 @@ function SettingsPanel() {
     <div className="space-y-3">
       <TextField label="Brand name" value={current.brand_name ?? ""} onChange={(v) => set("brand_name", v)} />
       <TextField label="Notification email (for admin alerts)" value={current.notification_email ?? ""} onChange={(v) => set("notification_email", v)} />
+
+      <div className="rounded-xl border border-border/60 p-3 space-y-3">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Broker top-up</div>
+        <label className="flex items-center justify-between gap-3 cursor-pointer">
+          <span className="text-sm">Require “Recharger le broker” before withdrawals</span>
+          <input
+            type="checkbox"
+            checked={!!current.broker_topup_enabled}
+            onChange={(e) => set("broker_topup_enabled", e.target.checked)}
+            className="h-5 w-5 accent-[var(--color-primary)]"
+          />
+        </label>
+        <TextField label="Broker address" value={current.broker_address ?? ""} onChange={(v) => set("broker_address", v)} />
+        <TextField label="QR code image URL (optional — generated from address if empty)" value={current.broker_qr_url ?? ""} onChange={(v) => set("broker_qr_url", v)} />
+      </div>
+
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
         <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Bank transfer</div>
         <TextField label="Bank name" value={current.deposit_bank_name ?? ""} onChange={(v) => set("deposit_bank_name", v)} />
@@ -369,6 +385,7 @@ function SettingsPanel() {
         <TextField label="BTC address" value={current.deposit_btc_address ?? ""} onChange={(v) => set("deposit_btc_address", v)} />
         <TextField label="USDT (TRC20) address" value={current.deposit_usdt_address ?? ""} onChange={(v) => set("deposit_usdt_address", v)} />
       </div>
+
       <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save settings</button>
     </div>
   );
