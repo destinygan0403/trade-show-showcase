@@ -17,17 +17,20 @@ export function TradeView({
   openPositions,
   onNewOrder,
   onClose,
+  onCloseAll,
 }: {
   balance: number;
   currency: string;
   openPositions: (Position & { live_price: number; live_pl: number })[];
   onNewOrder: () => void;
   onClose: (p: Position) => void;
+  onCloseAll: () => void;
 }) {
   const totalPL = openPositions.reduce((a, p) => a + p.live_pl, 0);
   const equity = balance + totalPL;
   const freeMargin = equity - Math.abs(totalPL) * 0.02;
   const fmt2 = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const hasPositions = openPositions.length > 0;
 
   return (
     <section className="fixed inset-0 bottom-16 bg-background flex flex-col z-10 max-w-md mx-auto">
@@ -52,19 +55,36 @@ export function TradeView({
         <SummaryRow label="Free Margin:" value={fmt2(freeMargin)} />
       </div>
 
-      <div className="flex items-center justify-between px-4 pt-2 pb-2 border-b border-border/40">
-        <span className="text-[13px] text-white/80">Positions</span>
-        <button className="text-white/50"><ArrowUpDown size={14} /></button>
+      <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={onNewOrder}
+          className="py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-xs"
+        >
+          Ouvrir une position
+        </button>
+        <button
+          onClick={onCloseAll}
+          disabled={!hasPositions}
+          className="py-2.5 rounded-xl border border-border font-semibold text-xs disabled:opacity-40"
+        >
+          Fermer toutes les positions
+        </button>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {openPositions.length === 0 && (
-          <div className="p-8 text-center text-sm text-muted-foreground">No open positions</div>
-        )}
-        {openPositions.map((p) => (
-          <MtPositionRow key={p.id} pos={p} onClose={() => onClose(p)} />
-        ))}
-      </div>
+      {hasPositions && (
+        <>
+          <div className="flex items-center justify-between px-4 pt-2 pb-2 border-b border-border/40">
+            <span className="text-[13px] text-white/80">Positions</span>
+            <button className="text-white/50"><ArrowUpDown size={14} /></button>
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {openPositions.map((p) => (
+              <MtPositionRow key={p.id} pos={p} onClose={() => onClose(p)} />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }
