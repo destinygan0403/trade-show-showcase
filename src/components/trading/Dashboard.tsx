@@ -271,6 +271,8 @@ export function Dashboard() {
       </nav>
 
       <TransactionModal open={!!txModal} onClose={() => setTxModal(null)} kind={txModal ?? "deposit"} userId={userId!} />
+      <BrokerTopUpModal open={brokerModal} onClose={() => setBrokerModal(false)} />
+      {txDetail && <TxDetailModal tx={txDetail} onClose={() => setTxDetail(null)} />}
       <OpenPositionModal open={openModal} onClose={() => setOpenModal(false)} onSubmit={submitNew} />
       <Toaster position="top-center" theme="dark" />
     </div>
