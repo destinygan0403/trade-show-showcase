@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -13,17 +13,27 @@ import {
   UserCircle2,
   ArrowUpDown,
   MoreVertical,
+  X,
 } from "lucide-react";
 
 import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
-import { useClosePosition, useIsAdmin, useMyPositions, useMyProfile, useOpenPosition } from "@/lib/data";
-import { generateFakePositions } from "@/lib/fake-positions";
+import {
+  useAppSettings,
+  useClosePosition,
+  useIsAdmin,
+  useMyPositions,
+  useMyProfile,
+  useMyTransactions,
+  useOpenPosition,
+  type Transaction,
+} from "@/lib/data";
 import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
-import { TransactionModal, OpenPositionModal } from "./Modals";
+import { TransactionModal, OpenPositionModal, BrokerTopUpModal } from "./Modals";
 
 type NavKey = "Accounts" | "Trade" | "Insights" | "Performance" | "Profile";
+type Tab = "Open" | "Pending" | "Closed" | "History";
 
 export function Dashboard() {
   const { user } = useSession();
@@ -34,11 +44,17 @@ export function Dashboard() {
   const isAdmin = useIsAdmin(userId);
   const openPos = useOpenPosition();
   const closePos = useClosePosition();
+  const settings = useAppSettings();
+  const transactions = useMyTransactions(userId);
+  const history = transactions.data ?? [];
+  const brokerRequired = !!settings.data?.broker_topup_enabled;
 
-  const [tab, setTab] = useState<"Open" | "Pending" | "Closed">("Open");
+  const [tab, setTab] = useState<Tab>("Open");
   const [navKey, setNavKey] = useState<NavKey>("Accounts");
   const [txModal, setTxModal] = useState<null | "deposit" | "withdrawal">(null);
   const [openModal, setOpenModal] = useState(false);
+  const [brokerModal, setBrokerModal] = useState(false);
+  const [txDetail, setTxDetail] = useState<Transaction | null>(null);
 
   // Client-side live drift on current_price for visual pop only.
   const [drift, setDrift] = useState(0);
@@ -46,6 +62,7 @@ export function Dashboard() {
     const id = setInterval(() => setDrift((d) => d + (Math.random() - 0.5) * 0.4), 1200);
     return () => clearInterval(id);
   }, []);
+
 
   const p = profile.data;
   const balance = Number(p?.balance ?? 0);
