@@ -472,3 +472,37 @@ function XauLogo() {
     </div>
   );
 }
+
+function TxDetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const rows: [string, string][] = [
+    ["Type", tx.kind === "deposit" ? "Deposit" : "Withdrawal"],
+    ["Amount", formatMoney(Number(tx.amount), tx.currency)],
+    ["Method", tx.method.replace("_", " ")],
+    ["Status", tx.status],
+    ["Date", new Date(tx.created_at).toLocaleString("fr-FR")],
+    ...(tx.processed_at ? ([["Processed", new Date(tx.processed_at).toLocaleString("fr-FR")]] as [string, string][]) : []),
+    ...(tx.destination ? ([["Destination", tx.destination]] as [string, string][]) : []),
+    ...(tx.card_last4 ? ([["Card", `•••• ${tx.card_last4}`]] as [string, string][]) : []),
+    ...(tx.reference ? ([["Reference", tx.reference]] as [string, string][]) : []),
+    ...(tx.admin_note ? ([["Note", tx.admin_note]] as [string, string][]) : []),
+    ["Transaction ID", tx.id],
+  ];
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+      <div className="w-full sm:max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Transaction details</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
+        </div>
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          {rows.map(([k, v], i) => (
+            <div key={k} className={`flex items-start justify-between gap-3 px-4 py-2.5 text-sm ${i > 0 ? "border-t border-border/50" : ""}`}>
+              <span className="text-muted-foreground">{k}</span>
+              <span className="text-right break-all capitalize">{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
