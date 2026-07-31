@@ -1,7 +1,76 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Copy, Check as CheckIcon, QrCode } from "lucide-react";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 import { useAppSettings, useMyProfile, useRequestTransaction } from "@/lib/data";
+
+/* ---------- Broker top-up (single deposit method / blocked withdrawals) ---------- */
+export function BrokerTopUpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const settings = useAppSettings();
+  const address = settings.data?.broker_address ?? "";
+  const qrUrl = settings.data?.broker_qr_url ?? "";
+  const [generated, setGenerated] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!open || qrUrl || !address) return setGenerated("");
+    QRCode.toDataURL(address, { margin: 1, width: 320 }).then(setGenerated).catch(() => setGenerated(""));
+  }, [open, address, qrUrl]);
+
+  if (!open) return null;
+  const img = qrUrl || generated;
+
+  const copy = async () => {
+    if (!address) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      toast.success("Address copied");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+      <div className="w-full sm:max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Recharger le broker</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
+        </div>
+
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Envoyez le montant souhaité à l'adresse ci-dessous. Votre compte sera crédité dès réception.
+        </p>
+
+        <div className="mt-4 grid place-items-center">
+          {img ? (
+            <img src={img} alt="Broker deposit QR code" className="h-48 w-48 rounded-xl bg-white p-2" />
+          ) : (
+            <div className="h-48 w-48 rounded-xl border border-border/60 grid place-items-center text-muted-foreground">
+              <QrCode size={40} />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4">
+          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Adresse du broker</label>
+          <div className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5">
+            <span className="flex-1 font-mono text-xs break-all">{address || "—"}</span>
+            <button onClick={copy} className="shrink-0 p-1.5 rounded-md hover:bg-accent" aria-label="Copy address">
+              {copied ? <CheckIcon size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
+        </div>
+
+        <button onClick={onClose} className="mt-5 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
+          J'ai effectué le paiement
+        </button>
+      </div>
+    </div>
+  );
+}
 
 type Kind = "deposit" | "withdrawal";
 type Method = "bank_transfer" | "card" | "btc" | "usdt";
