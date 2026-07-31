@@ -154,9 +154,13 @@ export function Dashboard() {
         <>
           <nav className="px-5 mt-6">
             <div className="flex items-center gap-1 border-b border-border/60">
-              {(["Open", "Pending", "Closed"] as const).map((t) => {
+              {(["Open", "Pending", "Closed", "History"] as const).map((t) => {
                 const active = tab === t;
-                const count = t === "Open" ? openPositions.length : t === "Closed" ? closedPositions.length : 0;
+                const count =
+                  t === "Open" ? openPositions.length
+                  : t === "Closed" ? closedPositions.length
+                  : t === "History" ? history.length
+                  : 0;
                 return (
                   <button
                     key={t}
@@ -178,7 +182,37 @@ export function Dashboard() {
             </div>
           </nav>
 
-          {list.length > 0 ? (
+          {tab === "History" ? (
+            history.length > 0 ? (
+              <section className="mt-4 border-t border-border/60">
+                {history.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTxDetail(t)}
+                    className="w-full text-left grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 border-b border-border/60 bg-surface/30"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-white capitalize">{t.kind}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {t.method.replace("_", " ")} · {new Date(t.created_at).toLocaleString("fr-FR")}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 tabular-nums">
+                      <div
+                        className="text-sm font-semibold"
+                        style={{ color: t.kind === "deposit" ? "var(--color-profit)" : "var(--color-loss)" }}
+                      >
+                        {t.kind === "deposit" ? "+" : "-"}{formatMoney(Number(t.amount), t.currency)}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground capitalize">{t.status}</div>
+                    </div>
+                  </button>
+                ))}
+              </section>
+            ) : (
+              <section className="px-5 mt-4" />
+            )
+          ) : list.length > 0 ? (
             <section className="mt-4">
               <div className="flex items-center justify-between px-5 pb-2">
                 <div className="flex items-center gap-2">
@@ -207,8 +241,8 @@ export function Dashboard() {
                     currentPrice={pos.live_price}
                     pl={pos.live_pl}
                     currency={currency}
-                    canClose={pos.status === "open" && !pos.is_fake}
-                    onClose={() => pos.is_fake ? undefined : closePos.mutate(pos, {
+                    canClose={pos.status === "open"}
+                    onClose={() => closePos.mutate(pos, {
                       onSuccess: () => toast.success("Position closed"),
                       onError: (e: any) => toast.error(e.message),
                     })}
