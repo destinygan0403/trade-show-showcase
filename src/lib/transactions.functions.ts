@@ -40,7 +40,7 @@ export const submitTransaction = createServerFn({ method: "POST" })
       .select("email,display_name")
       .eq("id", userId)
       .maybeSingle();
-    const { sendTransactionalEmail, getAdminNotificationEmail, formatFr } = await import("./email.server");
+    const { sendTransactionalEmail, getAdminNotificationEmail, formatUtc } = await import("./email.server");
     const adminEmail = await getAdminNotificationEmail();
     const methodLabel = {
       bank_transfer: "Bank transfer",
@@ -145,7 +145,7 @@ export const submitTransaction = createServerFn({ method: "POST" })
             ...(data.destination ? [{ label: "Destination", value: data.destination }] : []),
             ...(data.card_last4 ? [{ label: "Card", value: `•••• ${data.card_last4}` }] : []),
             ...(data.reference ? [{ label: "Your reference", value: data.reference }] : []),
-            { label: "Processed at", value: formatFr() },
+            { label: "Processed at", value: formatUtc() },
             { label: "New balance", value: `${newBalance.toFixed(2)} ${currency}`, accent: "profit" },
           ],
           reference: inserted?.id ?? undefined,
