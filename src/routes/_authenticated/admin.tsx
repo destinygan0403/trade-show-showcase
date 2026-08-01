@@ -92,11 +92,28 @@ function UsersPanel() {
   const q = useAllUsers();
   const upd = useAdminUpdateProfile();
   const createUser = useServerFn(adminCreateUser);
+  const deleteUser = useServerFn(adminDeleteUser);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<{ display_name: string; balance: string; total_pl: string; status: string } | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [newUser, setNewUser] = useState({ first_name: "", last_name: "", email: "", password: "" });
   const [busy, setBusy] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setBusy(true);
+    try {
+      await deleteUser({ data: { id: deleting.id } });
+      toast.success("User deleted");
+      setDeleting(null);
+      q.refetch();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const openEdit = (u: any) => {
     setEditing(u.id);
