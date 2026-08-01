@@ -335,9 +335,29 @@ export function Dashboard() {
         </div>
       </nav>
 
-      <TransactionModal open={!!txModal} onClose={() => setTxModal(null)} kind={txModal ?? "deposit"} userId={userId!} />
+      <TransactionModal
+        open={!!txModal}
+        onClose={() => setTxModal(null)}
+        kind={txModal ?? "deposit"}
+        userId={userId!}
+        blocked={withdrawalsBlocked}
+        onTopUp={() => setBrokerModal(true)}
+      />
       <BrokerTopUpModal open={brokerModal} onClose={() => setBrokerModal(false)} />
-      {txDetail && <TxDetailModal tx={txDetail} onClose={() => setTxDetail(null)} />}
+      {txDetail && (
+        <TxDetailModal
+          tx={txDetail}
+          onClose={() => setTxDetail(null)}
+          canDelete={!!isAdmin.data}
+          onDelete={() => {
+            delTx.mutate(txDetail.id, {
+              onSuccess: () => { toast.success("Transaction deleted"); setTxDetail(null); },
+              onError: (e: any) => toast.error(e.message),
+            });
+          }}
+        />
+      )}
+
       <OpenPositionModal open={openModal} onClose={() => setOpenModal(false)} onSubmit={submitNew} />
       <Toaster position="top-center" theme="dark" />
     </div>
