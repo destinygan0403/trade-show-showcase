@@ -80,11 +80,15 @@ export function TransactionModal({
   onClose,
   kind,
   userId,
+  blocked,
+  onTopUp,
 }: {
   open: boolean;
   onClose: () => void;
   kind: Kind;
   userId: string;
+  blocked?: boolean;
+  onTopUp?: () => void;
 }) {
   const [method, setMethod] = useState<Method>("bank_transfer");
   const [amount, setAmount] = useState("");
@@ -96,6 +100,8 @@ export function TransactionModal({
   const req = useRequestTransaction();
 
   if (!open) return null;
+  const locked = kind === "withdrawal" && !!blocked;
+
 
   const methods: { id: Method; label: string }[] = [
     { id: "bank_transfer", label: "Bank transfer" },
