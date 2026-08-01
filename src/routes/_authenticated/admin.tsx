@@ -5,7 +5,7 @@ import { toast, Toaster } from "sonner";
 import { ArrowLeft, Check, X, ShieldCheck, UserPlus } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { formatMoney } from "@/lib/format";
-import { adminCreateUser } from "@/lib/admin.functions";
+import { adminCreateUser, adminDeleteUser } from "@/lib/admin.functions";
 import {
   useAllOpenPositions,
   useAllTransactions,
