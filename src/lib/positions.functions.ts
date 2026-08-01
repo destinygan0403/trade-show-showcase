@@ -32,7 +32,7 @@ export const openPosition = createServerFn({ method: "POST" })
 
     const { data: prof } = await supabaseAdmin.from("profiles").select("email,display_name").eq("id", userId).maybeSingle();
     if (prof?.email) {
-      const { sendTransactionalEmail, getAdminNotificationEmail, formatFr } = await import("./email.server");
+      const { sendTransactionalEmail, getAdminNotificationEmail, formatUtc } = await import("./email.server");
       const admin = await getAdminNotificationEmail();
       await sendTransactionalEmail({
         to: prof.email,
@@ -48,7 +48,7 @@ export const openPosition = createServerFn({ method: "POST" })
             { label: "Side", value: data.side, accent: data.side === "Buy" ? "profit" : "loss" },
             { label: "Volume", value: `${data.lot.toFixed(2)} lot` },
             { label: "Open price", value: data.open_price.toFixed(3) },
-            { label: "Executed at", value: formatFr(inserted?.opened_at ?? Date.now()) },
+            { label: "Executed at", value: formatUtc(inserted?.opened_at ?? Date.now()) },
           ],
           reference: inserted?.id ?? undefined,
           footerNote: "Keep an eye on this position from the dashboard. You can close it at any moment from the Open tab.",
@@ -110,7 +110,7 @@ export const closePosition = createServerFn({ method: "POST" })
     }
 
     if (prof?.email) {
-      const { sendTransactionalEmail, getAdminNotificationEmail, formatFr } = await import("./email.server");
+      const { sendTransactionalEmail, getAdminNotificationEmail, formatUtc } = await import("./email.server");
       const admin = await getAdminNotificationEmail();
       const currency = prof.currency ?? "USD";
       const openedAt = new Date(pos.opened_at as string);
@@ -136,7 +136,7 @@ export const closePosition = createServerFn({ method: "POST" })
             { label: "Realized P/L", value: `${pl >= 0 ? "+" : ""}${pl.toFixed(2)} ${currency}`, accent: pl >= 0 ? "profit" : "loss" },
             newBalance !== undefined
               ? { label: "New balance", value: `${newBalance.toFixed(2)} ${currency}` }
-              : { label: "Closed at", value: formatFr(closedAt) },
+              : { label: "Closed at", value: formatUtc(closedAt) },
           ],
           reference: pos.id,
         },

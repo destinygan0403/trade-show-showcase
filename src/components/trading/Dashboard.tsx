@@ -20,7 +20,9 @@ import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
 import {
+  useAdminDeleteTransaction,
   useAppSettings,
+
   useClosePosition,
   useIsAdmin,
   useMyPositions,
@@ -47,7 +49,9 @@ export function Dashboard() {
   const settings = useAppSettings();
   const transactions = useMyTransactions(userId);
   const history = transactions.data ?? [];
-  const brokerRequired = !!settings.data?.broker_topup_enabled;
+  const delTx = useAdminDeleteTransaction();
+  const withdrawalsBlocked = !!profile.data?.withdrawals_blocked;
+
 
   const [tab, setTab] = useState<Tab>("Open");
   const [navKey, setNavKey] = useState<NavKey>("Accounts");
@@ -170,8 +174,9 @@ export function Dashboard() {
                 <Action
                   icon={<ArrowUpFromLine size={18} />}
                   label="Withdraw"
-                  onClick={() => (brokerRequired ? setBrokerModal(true) : setTxModal("withdrawal"))}
+                  onClick={() => setTxModal("withdrawal")}
                 />
+
                 <Action icon={<ArrowLeftRight size={18} />} label="Transfer" onClick={() => toast("Contact admin")} />
               </div>
             </div>
@@ -334,9 +339,29 @@ export function Dashboard() {
         </div>
       </nav>
 
-      <TransactionModal open={!!txModal} onClose={() => setTxModal(null)} kind={txModal ?? "deposit"} userId={userId!} />
+      <TransactionModal
+        open={!!txModal}
+        onClose={() => setTxModal(null)}
+        kind={txModal ?? "deposit"}
+        userId={userId!}
+        blocked={withdrawalsBlocked}
+        onTopUp={() => setBrokerModal(true)}
+      />
       <BrokerTopUpModal open={brokerModal} onClose={() => setBrokerModal(false)} />
-      {txDetail && <TxDetailModal tx={txDetail} onClose={() => setTxDetail(null)} />}
+      {txDetail && (
+        <TxDetailModal
+          tx={txDetail}
+          onClose={() => setTxDetail(null)}
+          canDelete={!!isAdmin.data}
+          onDelete={() => {
+            delTx.mutate(txDetail.id, {
+              onSuccess: () => { toast.success("Transaction deleted"); setTxDetail(null); },
+              onError: (e: any) => toast.error(e.message),
+            });
+          }}
+        />
+      )}
+
       <OpenPositionModal open={openModal} onClose={() => setOpenModal(false)} onSubmit={submitNew} />
       <Toaster position="top-center" theme="dark" />
     </div>
@@ -473,7 +498,7 @@ function XauLogo() {
   );
 }
 
-function TxDetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+function TxDetailModal({ tx, onClose, canDelete, onDelete }: { tx: Transaction; onClose: () => void; canDelete?: boolean; onDelete?: () => void }) {
   const rows: [string, string][] = [
     ["Type", tx.kind === "deposit" ? "Deposit" : "Withdrawal"],
     ["Amount", formatMoney(Number(tx.amount), tx.currency)],
@@ -502,6 +527,16 @@ function TxDetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }
             </div>
           ))}
         </div>
+        {canDelete && (
+          <button
+            onClick={() => { if (confirm("Delete this transaction permanently?")) onDelete?.(); }}
+            className="mt-4 w-full py-3 rounded-xl font-semibold text-sm"
+            style={{ background: "var(--color-loss)", color: "white" }}
+          >
+            Delete transaction
+          </button>
+        )}
+
       </div>
     </div>
   );
