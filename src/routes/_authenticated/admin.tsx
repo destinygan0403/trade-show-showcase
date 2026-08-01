@@ -178,6 +178,21 @@ function UsersPanel() {
             <div><span className="text-muted-foreground">Balance:</span> {formatMoney(Number(u.balance), u.currency)}</div>
             <div><span className="text-muted-foreground">Total P/L:</span> {formatMoney(Number(u.total_pl), u.currency, true)}</div>
           </div>
+          <label className="mt-3 flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-border/60 px-3 py-2">
+            <span className="text-xs">Require broker top-up before withdrawals</span>
+            <input
+              type="checkbox"
+              checked={!!u.withdrawals_blocked}
+              onChange={async (e) => {
+                try {
+                  await upd.mutateAsync({ id: u.id, patch: { withdrawals_blocked: e.target.checked } });
+                  toast.success(e.target.checked ? "Withdrawals blocked" : "Withdrawals unlocked");
+                } catch (err: any) { toast.error(err.message); }
+              }}
+              className="h-5 w-5 accent-[var(--color-primary)]"
+            />
+          </label>
+
         </div>
       ))}
 
