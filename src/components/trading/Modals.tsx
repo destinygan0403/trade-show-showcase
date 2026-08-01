@@ -111,8 +111,10 @@ export function TransactionModal({
   ];
 
   const submit = async () => {
+    if (locked) return;
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
+
     if (kind === "withdrawal") {
       const bal = Number(profile.data?.balance ?? 0);
       if (amt > bal) return toast.error(`Insufficient balance (available ${bal.toFixed(2)})`);
