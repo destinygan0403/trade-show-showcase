@@ -47,7 +47,9 @@ export function Dashboard() {
   const settings = useAppSettings();
   const transactions = useMyTransactions(userId);
   const history = transactions.data ?? [];
-  const brokerRequired = !!settings.data?.broker_topup_enabled;
+  const delTx = useAdminDeleteTransaction();
+  const withdrawalsBlocked = !!profile.data?.withdrawals_blocked;
+
 
   const [tab, setTab] = useState<Tab>("Open");
   const [navKey, setNavKey] = useState<NavKey>("Accounts");
