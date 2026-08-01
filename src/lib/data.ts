@@ -242,7 +242,22 @@ export function useAdminSettleTransaction() {
   });
 }
 
+export function useAdminDeleteTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tx"] });
+      qc.invalidateQueries({ queryKey: ["admin-tx"] });
+    },
+  });
+}
+
 export function useAdminUpdateSettings() {
+
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (patch: Partial<AppSettings>) => {
