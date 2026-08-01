@@ -6,7 +6,6 @@ import {
   TrendingUp,
   ArrowDownToLine,
   ArrowUpFromLine,
-  ArrowLeftRight,
   Wallet,
   BarChart3,
   LineChart,
