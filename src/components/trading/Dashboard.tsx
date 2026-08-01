@@ -20,7 +20,9 @@ import { toast, Toaster } from "sonner";
 import { useSession } from "@/lib/session";
 import { formatMoney, formatNumber } from "@/lib/format";
 import {
+  useAdminDeleteTransaction,
   useAppSettings,
+
   useClosePosition,
   useIsAdmin,
   useMyPositions,
