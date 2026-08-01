@@ -170,9 +170,17 @@ function UsersPanel() {
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10">{u.status}</span>
               </div>
             </div>
-            <button onClick={() => openEdit(u)} className="text-xs px-3 py-1.5 rounded-md border border-border">
-              Edit
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => openEdit(u)} className="text-xs px-3 py-1.5 rounded-md border border-border">
+                Edit
+              </button>
+              <button
+                onClick={() => setDeleting({ id: u.id, name: u.display_name })}
+                className="text-xs px-3 py-1.5 rounded-md border border-destructive/50 text-destructive"
+              >
+                Delete
+              </button>
+            </div>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
             <div><span className="text-muted-foreground">Balance:</span> {formatMoney(Number(u.balance), u.currency)}</div>
