@@ -161,7 +161,7 @@ export function TransactionModal({
           ))}
         </div>
 
-        <div className="space-y-3">
+        <div className={`space-y-3 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`} aria-disabled={locked}>
           <Field label="Amount (USD)" value={amount} onChange={setAmount} placeholder="1000" />
 
           {kind === "deposit" && method === "bank_transfer" && s && (
@@ -197,7 +197,11 @@ export function TransactionModal({
             />
           )}
 
-          <button onClick={submit} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
+          <button
+            onClick={submit}
+            disabled={locked}
+            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
+          >
             Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
@@ -205,6 +209,22 @@ export function TransactionModal({
           </p>
 
         </div>
+
+        {locked && (
+          <div className="mt-4 rounded-xl border p-4" style={{ borderColor: "color-mix(in oklch, var(--color-loss) 45%, transparent)", background: "color-mix(in oklch, var(--color-loss) 12%, transparent)" }}>
+            <div className="text-sm font-semibold">Retrait momentanément indisponible</div>
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              Votre marge de courtage est insuffisante pour libérer les retraits. Rechargez le broker pour débloquer vos moyens de retrait.
+            </p>
+            <button
+              onClick={() => { onClose(); onTopUp?.(); }}
+              className="mt-3 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+            >
+              Recharger le broker
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );
