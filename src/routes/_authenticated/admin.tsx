@@ -5,7 +5,7 @@ import { toast, Toaster } from "sonner";
 import { ArrowLeft, Check, X, ShieldCheck, UserPlus } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { formatMoney } from "@/lib/format";
-import { adminCreateUser } from "@/lib/admin.functions";
+import { adminCreateUser, adminDeleteUser } from "@/lib/admin.functions";
 import {
   useAllOpenPositions,
   useAllTransactions,
@@ -92,11 +92,28 @@ function UsersPanel() {
   const q = useAllUsers();
   const upd = useAdminUpdateProfile();
   const createUser = useServerFn(adminCreateUser);
+  const deleteUser = useServerFn(adminDeleteUser);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<{ display_name: string; balance: string; total_pl: string; status: string } | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [newUser, setNewUser] = useState({ first_name: "", last_name: "", email: "", password: "" });
   const [busy, setBusy] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setBusy(true);
+    try {
+      await deleteUser({ data: { id: deleting.id } });
+      toast.success("User deleted");
+      setDeleting(null);
+      q.refetch();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const openEdit = (u: any) => {
     setEditing(u.id);
@@ -170,9 +187,17 @@ function UsersPanel() {
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10">{u.status}</span>
               </div>
             </div>
-            <button onClick={() => openEdit(u)} className="text-xs px-3 py-1.5 rounded-md border border-border">
-              Edit
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => openEdit(u)} className="text-xs px-3 py-1.5 rounded-md border border-border">
+                Edit
+              </button>
+              <button
+                onClick={() => setDeleting({ id: u.id, name: u.display_name })}
+                className="text-xs px-3 py-1.5 rounded-md border border-destructive/50 text-destructive"
+              >
+                Delete
+              </button>
+            </div>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
             <div><span className="text-muted-foreground">Balance:</span> {formatMoney(Number(u.balance), u.currency)}</div>
@@ -224,6 +249,25 @@ function UsersPanel() {
           <p className="text-[11px] text-muted-foreground text-center">
             The user will be able to sign in immediately with this email and password.
           </p>
+        </Modal>
+      )}
+
+      {deleting && (
+        <Modal onClose={() => setDeleting(null)} title="Delete user">
+          <p className="text-sm text-muted-foreground">
+            This permanently deletes <span className="text-foreground font-semibold">{deleting.name}</span> and all of their
+            data (positions, transactions, notifications). This cannot be undone.
+          </p>
+          <button
+            onClick={confirmDelete}
+            disabled={busy}
+            className="w-full py-3 rounded-xl bg-destructive text-destructive-foreground font-semibold text-sm disabled:opacity-60"
+          >
+            {busy ? "Deleting…" : "Delete permanently"}
+          </button>
+          <button onClick={() => setDeleting(null)} className="w-full py-2.5 rounded-xl border border-border text-sm">
+            Cancel
+          </button>
         </Modal>
       )}
     </div>
