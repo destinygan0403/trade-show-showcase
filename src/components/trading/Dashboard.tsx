@@ -527,6 +527,16 @@ function TxDetailModal({ tx, onClose, canDelete, onDelete }: { tx: Transaction; 
             </div>
           ))}
         </div>
+        {canDelete && (
+          <button
+            onClick={() => { if (confirm("Delete this transaction permanently?")) onDelete?.(); }}
+            className="mt-4 w-full py-3 rounded-xl font-semibold text-sm"
+            style={{ background: "var(--color-loss)", color: "white" }}
+          >
+            Delete transaction
+          </button>
+        )}
+
       </div>
     </div>
   );
