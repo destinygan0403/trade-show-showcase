@@ -498,7 +498,7 @@ function XauLogo() {
   );
 }
 
-function TxDetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+function TxDetailModal({ tx, onClose, canDelete, onDelete }: { tx: Transaction; onClose: () => void; canDelete?: boolean; onDelete?: () => void }) {
   const rows: [string, string][] = [
     ["Type", tx.kind === "deposit" ? "Deposit" : "Withdrawal"],
     ["Amount", formatMoney(Number(tx.amount), tx.currency)],
