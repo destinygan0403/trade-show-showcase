@@ -170,8 +170,9 @@ export function Dashboard() {
                 <Action
                   icon={<ArrowUpFromLine size={18} />}
                   label="Withdraw"
-                  onClick={() => (brokerRequired ? setBrokerModal(true) : setTxModal("withdrawal"))}
+                  onClick={() => setTxModal("withdrawal")}
                 />
+
                 <Action icon={<ArrowLeftRight size={18} />} label="Transfer" onClick={() => toast("Contact admin")} />
               </div>
             </div>
