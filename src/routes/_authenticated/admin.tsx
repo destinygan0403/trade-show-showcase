@@ -251,6 +251,25 @@ function UsersPanel() {
           </p>
         </Modal>
       )}
+
+      {deleting && (
+        <Modal onClose={() => setDeleting(null)} title="Delete user">
+          <p className="text-sm text-muted-foreground">
+            This permanently deletes <span className="text-foreground font-semibold">{deleting.name}</span> and all of their
+            data (positions, transactions, notifications). This cannot be undone.
+          </p>
+          <button
+            onClick={confirmDelete}
+            disabled={busy}
+            className="w-full py-3 rounded-xl bg-destructive text-destructive-foreground font-semibold text-sm disabled:opacity-60"
+          >
+            {busy ? "Deleting…" : "Delete permanently"}
+          </button>
+          <button onClick={() => setDeleting(null)} className="w-full py-2.5 rounded-xl border border-border text-sm">
+            Cancel
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }
