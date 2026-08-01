@@ -75,19 +75,21 @@ function renderText(p: MailPayload) {
   return `${p.title}\n\n${p.intro}\n\n${rows}${p.reference ? `\n\nReference: ${p.reference}` : ""}\n\n— ${BRAND}`;
 }
 
-/** Format a date in the France timezone (Europe/Paris). */
-export function formatFr(date?: Date | string | number) {
+/** Format a date as a universal UTC timestamp (suffixed with "UTC"). */
+export function formatUtc(date?: Date | string | number) {
   const d = date === undefined ? new Date() : new Date(date);
-  return new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }).format(d) + " (heure de Paris)";
+    hour12: false,
+  }).format(d) + " UTC";
 }
+
 
 /**
  * Send a transactional email ONLY to the admin notification address
