@@ -220,6 +220,20 @@ function UsersPanel() {
             <div><span className="text-muted-foreground">P/L total :</span> {formatMoney(Number(u.total_pl), u.currency, true)}</div>
           </div>
           <label className="mt-3 flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-border/60 px-3 py-2">
+            <span className="text-xs">Compte vérifié (autorise le trading, les dépôts et les retraits)</span>
+            <input
+              type="checkbox"
+              checked={!!(u as any).verified}
+              onChange={async (e) => {
+                try {
+                  await upd.mutateAsync({ id: u.id, patch: { verified: e.target.checked } });
+                  toast.success(e.target.checked ? "Compte vérifié" : "Vérification retirée");
+                } catch (err: any) { toast.error(err.message); }
+              }}
+              className="h-5 w-5 accent-[var(--color-primary)]"
+            />
+          </label>
+          <label className="mt-2 flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-border/60 px-3 py-2">
             <span className="text-xs">Bloquer les retraits (exiger une recharge du broker)</span>
             <input
               type="checkbox"
@@ -233,6 +247,7 @@ function UsersPanel() {
               className="h-5 w-5 accent-[var(--color-primary)]"
             />
           </label>
+
 
         </div>
       ))}
