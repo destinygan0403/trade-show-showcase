@@ -358,12 +358,12 @@ export function ProfileView({
         <div>
           <div className="flex items-center gap-1.5">
             <span className="text-lg font-semibold text-white">{profile?.display_name ?? "…"}</span>
-            {(profile as any)?.verified && <BadgeCheck size={18} className="text-primary" />}
+            {profile?.verified && <BadgeCheck size={18} className="text-primary" />}
           </div>
           <div className="text-xs text-muted-foreground">{email}</div>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {(profile as any)?.verified ? (
+          {profile?.verified ? (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-[color-mix(in_oklab,var(--color-profit)_20%,transparent)] text-[var(--color-profit)]">
               <BadgeCheck size={12} /> Verified account
             </span>
