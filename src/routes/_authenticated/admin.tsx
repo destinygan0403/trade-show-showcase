@@ -368,22 +368,29 @@ function TransactionsPanel() {
   const settle = useAdminSettleTransaction();
   const nameFor = (uid: string) => users.data?.find((u: any) => u.id === uid)?.display_name ?? uid.slice(0, 8);
 
+  const kindLabel = (k: string) => (k === "deposit" ? "Dépôt" : "Retrait");
+  const methodLabel = (m: string) =>
+    ({ bank_transfer: "Virement bancaire", card: "Carte bancaire", btc: "Bitcoin", usdt: "USDT" } as Record<string, string>)[m] ?? m;
+  const statusLabel = (s: string) =>
+    ({ approved: "Validé", rejected: "Refusé", pending: "En attente" } as Record<string, string>)[s] ?? s;
+
   return (
     <div className="space-y-3">
+      {(q.data ?? []).length === 0 && <p className="text-sm text-muted-foreground">Aucune transaction.</p>}
       {(q.data ?? []).map((t) => (
         <div key={t.id} className="rounded-xl border border-border/60 bg-surface/60 p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-sm font-semibold capitalize">{t.kind} · {t.method.replace("_", " ")}</div>
+              <div className="text-sm font-semibold">{kindLabel(t.kind)} · {methodLabel(t.method)}</div>
               <div className="text-[11px] text-muted-foreground truncate">{nameFor(t.user_id)}</div>
-              {t.reference && <div className="text-[11px] text-muted-foreground truncate">Ref: {t.reference}</div>}
-              {t.destination && <div className="text-[11px] text-muted-foreground truncate">To: {t.destination}</div>}
-              {t.card_last4 && <div className="text-[11px] text-muted-foreground">Card •••• {t.card_last4}</div>}
+              {t.reference && <div className="text-[11px] text-muted-foreground truncate">Référence : {t.reference}</div>}
+              {t.destination && <div className="text-[11px] text-muted-foreground truncate">Destinataire : {t.destination}</div>}
+              {t.card_last4 && <div className="text-[11px] text-muted-foreground">Carte •••• {t.card_last4}</div>}
             </div>
             <div className="text-right shrink-0">
               <div className="text-sm font-semibold tabular-nums">{formatMoney(Number(t.amount), t.currency)}</div>
               <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase mt-1 inline-block"
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded mt-1 inline-block"
                 style={{
                   background:
                     t.status === "approved"
@@ -393,7 +400,7 @@ function TransactionsPanel() {
                       : "rgba(255,255,255,0.08)",
                 }}
               >
-                {t.status}
+                {statusLabel(t.status)}
               </span>
             </div>
           </div>
@@ -404,17 +411,17 @@ function TransactionsPanel() {
                 className="flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
                 style={{ background: "var(--color-profit)", color: "black" }}
               >
-                <Check size={14} /> Approve
+                <Check size={14} /> Valider
               </button>
               <button
                 onClick={() => {
-                  const n = prompt("Rejection reason (optional)") ?? undefined;
+                  const n = prompt("Motif du refus (facultatif)") ?? undefined;
                   settle.mutate({ tx: t, approve: false, note: n });
                 }}
                 className="flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
                 style={{ background: "var(--color-loss)", color: "white" }}
               >
-                <X size={14} /> Reject
+                <X size={14} /> Refuser
               </button>
             </div>
           )}
