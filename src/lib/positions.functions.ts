@@ -6,18 +6,25 @@ type Side = "Buy" | "Sell";
 
 export const openPosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { side: Side; lot: number; open_price: number; symbol?: string }) => {
+  .inputValidator((input: { side: Side; lot: number; open_price: number; symbol?: string; stake?: number }) => {
     if (input.side !== "Buy" && input.side !== "Sell") throw new Error("Invalid side");
     const lot = Number(input.lot);
     const price = Number(input.open_price);
     if (!Number.isFinite(lot) || lot <= 0) throw new Error("Invalid lot");
     if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid price");
+    const stake = Number(input.stake ?? 0);
+    if (!Number.isFinite(stake) || stake < 0) throw new Error("Montant investi invalide");
     const symbol = input.symbol && isTradableSymbol(input.symbol) ? input.symbol : DEFAULT_SYMBOL;
-    return { side: input.side, lot, open_price: price, symbol };
+    return { side: input.side, lot, open_price: price, symbol, stake };
   })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
+
+    if (data.stake > 0) {
+      const { data: bal } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).maybeSingle();
+      if (!bal || Number(bal.balance) < data.stake) throw new Error("Solde insuffisant pour ouvrir cette position");
+    }
 
     const { data: inserted, error } = await supabaseAdmin
       .from("positions")
@@ -26,12 +33,19 @@ export const openPosition = createServerFn({ method: "POST" })
         symbol: data.symbol,
         side: data.side,
         lot: data.lot,
+        stake: data.stake,
         open_price: data.open_price,
         current_price: data.open_price,
       })
       .select("id, opened_at")
       .maybeSingle();
     if (error) throw new Error(error.message);
+
+    // Margin is debited from the balance right away (credited back on close).
+    if (data.stake > 0) {
+      const { error: dErr } = await supabaseAdmin.rpc("apply_balance_only", { _user_id: userId, _delta: -data.stake });
+      if (dErr) throw new Error(dErr.message);
+    }
 
     const { data: prof } = await supabaseAdmin.from("profiles").select("email,display_name").eq("id", userId).maybeSingle();
     if (prof?.email) {
@@ -51,6 +65,7 @@ export const openPosition = createServerFn({ method: "POST" })
             { label: "Side", value: data.side, accent: data.side === "Buy" ? "profit" : "loss" },
             { label: "Volume", value: `${data.lot.toFixed(2)} lot` },
             { label: "Open price", value: data.open_price.toFixed(3) },
+            ...(data.stake > 0 ? [{ label: "Invested amount", value: data.stake.toFixed(2) }] : []),
             { label: "Executed at", value: formatInTz(cfg.timezone, inserted?.opened_at ?? Date.now()) },
           ],
           reference: inserted?.id ?? undefined,
@@ -64,7 +79,7 @@ export const openPosition = createServerFn({ method: "POST" })
 
 export const closePosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { positionId: string }) => {
+  .inputValidator((input: { positionId: string; client_pl?: number }) => {
     if (!input?.positionId) throw new Error("Missing positionId");
     return input;
   })
@@ -82,14 +97,20 @@ export const closePosition = createServerFn({ method: "POST" })
     if (pos.user_id !== userId) throw new Error("Forbidden");
     if (pos.status !== "open") throw new Error("Position already closed");
 
+    const stake = Number((pos as { stake?: number }).stake ?? 0) || 0;
     let pl = Number(pos.pl);
     const closePrice = Number(pos.current_price);
     if (pos.verdict === "force_win") {
       pl = Math.abs(Number(pos.verdict_amount ?? 5000));
     } else if (pos.verdict === "force_loss") {
       pl = -Math.abs(Number(pos.verdict_amount ?? 5000));
+    } else if (Number.isFinite(Number(data.client_pl))) {
+      // No admin verdict: settle on the live (floating) P/L shown to the user.
+      pl = Number(data.client_pl);
     }
     if (!Number.isFinite(pl)) pl = 0;
+    // A losing position can never cost more than the invested amount.
+    if (stake > 0 && pl < -stake) pl = -stake;
 
     const closedAt = new Date().toISOString();
     // Guard against double-close races: only the update that still sees the
@@ -103,8 +124,12 @@ export const closePosition = createServerFn({ method: "POST" })
     if (uErr) throw new Error(uErr.message);
     if (!updatedRows || updatedRows.length === 0) throw new Error("Position already closed");
 
-    // Atomic credit/debit — avoids lost updates when several positions are
-    // closed at the same time (read-modify-write used to drop the gains).
+    // Give the invested margin back (balance only, not counted as P/L)…
+    if (stake > 0) {
+      const { error: rErr } = await supabaseAdmin.rpc("apply_balance_only", { _user_id: userId, _delta: stake });
+      if (rErr) throw new Error(rErr.message);
+    }
+    // …then apply the realized result atomically (balance + total P/L).
     const { data: newBalanceRaw, error: rpcErr } = await supabaseAdmin.rpc("apply_balance_delta", {
       _user_id: userId,
       _delta: pl,

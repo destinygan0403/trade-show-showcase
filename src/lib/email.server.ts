@@ -94,7 +94,7 @@ export function formatInTz(timeZone: string | null | undefined, date?: Date | st
   } catch {
     return formatInTz("UTC", d);
   }
-  return `${formatted} (${tz})`;
+  return formatted;
 }
 
 /** Backwards-compatible UTC formatter. */
