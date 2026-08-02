@@ -124,14 +124,17 @@ import { SYMBOL_BASE_PRICE } from "./symbols";
 export function useOpenPosition() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { userId: string; side: "Buy" | "Sell"; lot: number; symbol?: string }) => {
+    mutationFn: async (input: { userId: string; side: "Buy" | "Sell"; lot: number; symbol?: string; stake?: number }) => {
       const symbol = input.symbol ?? "XAUUSD";
       const base = SYMBOL_BASE_PRICE[symbol] ?? 1;
       const spread = base * 0.0008;
       const openPrice = Number((base + (Math.random() - 0.5) * spread * 2).toFixed(base > 50 ? 3 : 5));
-      await openPosition({ data: { side: input.side, lot: input.lot, open_price: openPrice, symbol } });
+      await openPosition({ data: { side: input.side, lot: input.lot, open_price: openPrice, symbol, stake: input.stake ?? 0 } });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["positions"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["positions"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
   });
 }
 
@@ -139,8 +142,8 @@ export function useOpenPosition() {
 export function useClosePosition() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (position: Position) => {
-      await closePosition({ data: { positionId: position.id } });
+    mutationFn: async (input: Position & { client_pl?: number }) => {
+      await closePosition({ data: { positionId: input.id, client_pl: input.client_pl } });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["positions"] });
