@@ -433,6 +433,10 @@ export function Dashboard() {
       )}
 
       <OpenPositionModal open={openModal} onClose={() => setOpenModal(false)} onSubmit={submitNew} />
+      {notifOpen && (
+        <NotificationsPanel userId={userId} items={notifItems} onClose={() => setNotifOpen(false)} />
+      )}
+
       <Toaster position="top-center" theme="dark" />
     </div>
   );
