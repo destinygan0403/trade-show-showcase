@@ -119,17 +119,22 @@ export function useAllOpenPositions() {
 // ---------------- Mutations ----------------
 
 import { openPosition, closePosition } from "./positions.functions";
+import { SYMBOL_BASE_PRICE } from "./symbols";
 
 export function useOpenPosition() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { userId: string; side: "Buy" | "Sell"; lot: number }) => {
-      const openPrice = Number((4046 + (Math.random() - 0.5) * 6).toFixed(3));
-      await openPosition({ data: { side: input.side, lot: input.lot, open_price: openPrice } });
+    mutationFn: async (input: { userId: string; side: "Buy" | "Sell"; lot: number; symbol?: string }) => {
+      const symbol = input.symbol ?? "XAUUSD";
+      const base = SYMBOL_BASE_PRICE[symbol] ?? 1;
+      const spread = base * 0.0008;
+      const openPrice = Number((base + (Math.random() - 0.5) * spread * 2).toFixed(base > 50 ? 3 : 5));
+      await openPosition({ data: { side: input.side, lot: input.lot, open_price: openPrice, symbol } });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["positions"] }),
   });
 }
+
 
 export function useClosePosition() {
   const qc = useQueryClient();

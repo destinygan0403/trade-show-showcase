@@ -75,20 +75,33 @@ function renderText(p: MailPayload) {
   return `${p.title}\n\n${p.intro}\n\n${rows}${p.reference ? `\n\nReference: ${p.reference}` : ""}\n\n— ${BRAND}`;
 }
 
-/** Format a date as a universal UTC timestamp (suffixed with "UTC"). */
-export function formatUtc(date?: Date | string | number) {
+/** Format a date in the timezone configured in the admin panel. */
+export function formatInTz(timeZone: string | null | undefined, date?: Date | string | number) {
+  const tz = timeZone && timeZone.trim() ? timeZone : "UTC";
   const d = date === undefined ? new Date() : new Date(date);
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "UTC",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(d) + " UTC";
+  let formatted: string;
+  try {
+    formatted = new Intl.DateTimeFormat("en-GB", {
+      timeZone: tz,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(d);
+  } catch {
+    return formatInTz("UTC", d);
+  }
+  return `${formatted} (${tz})`;
 }
+
+/** Backwards-compatible UTC formatter. */
+export function formatUtc(date?: Date | string | number) {
+  return formatInTz("UTC", date);
+}
+
 
 
 /**
@@ -132,8 +145,19 @@ export async function sendTransactionalEmail(opts: {
 }
 
 
-export async function getAdminNotificationEmail(): Promise<string | null> {
+export async function getMailConfig(): Promise<{ email: string | null; timezone: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("app_settings").select("notification_email").eq("id", 1).maybeSingle();
-  return (data?.notification_email as string | null) ?? null;
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("notification_email, timezone")
+    .eq("id", 1)
+    .maybeSingle();
+  return {
+    email: (data?.notification_email as string | null) ?? null,
+    timezone: (data?.timezone as string | null) ?? "UTC",
+  };
+}
+
+export async function getAdminNotificationEmail(): Promise<string | null> {
+  return (await getMailConfig()).email;
 }

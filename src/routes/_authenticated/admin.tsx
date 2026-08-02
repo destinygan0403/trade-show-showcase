@@ -34,6 +34,20 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Tab = "users" | "positions" | "transactions" | "settings";
 
+const TAB_LABELS: Record<Tab, string> = {
+  users: "Utilisateurs",
+  positions: "Positions",
+  transactions: "Transactions",
+  settings: "Paramètres",
+};
+
+const TAB_HINTS: Record<Tab, string> = {
+  users: "Créer, modifier ou supprimer des comptes, ajuster le solde et bloquer les retraits.",
+  positions: "Décider du résultat des positions ouvertes : gain forcé, perte forcée ou automatique.",
+  transactions: "Suivre les dépôts et retraits de tous les comptes.",
+  settings: "Marque, e-mail de notification, fuseau horaire et coordonnées de paiement.",
+};
+
 function AdminPage() {
   const nav = useNavigate();
   const { user } = useSession();
@@ -46,8 +60,8 @@ function AdminPage() {
       <div className="min-h-screen grid place-items-center px-5 text-center">
         <div>
           <ShieldCheck size={40} className="mx-auto text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">Admins only.</p>
-          <button onClick={() => nav({ to: "/dashboard" })} className="mt-4 text-sm text-primary">Back to app</button>
+          <p className="mt-3 text-sm text-muted-foreground">Accès réservé aux administrateurs.</p>
+          <button onClick={() => nav({ to: "/dashboard" })} className="mt-4 text-sm text-primary">Retour à l’application</button>
         </div>
       </div>
     );
@@ -61,24 +75,25 @@ function AdminPage() {
           <button onClick={() => nav({ to: "/dashboard" })} className="p-2 rounded-full hover:bg-accent">
             <ArrowLeft size={18} />
           </button>
-          <h1 className="text-lg font-bold">Admin Console</h1>
+          <h1 className="text-lg font-bold">Espace administrateur</h1>
         </div>
         <nav className="max-w-3xl mx-auto flex gap-1 px-2 pb-1 overflow-x-auto">
           {(["users", "positions", "transactions", "settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-3 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition ${
+              className={`px-3 py-2 text-xs font-semibold tracking-wide rounded-md transition whitespace-nowrap ${
                 tab === t ? "bg-primary/20 text-primary" : "text-muted-foreground"
               }`}
             >
-              {t}
+              {TAB_LABELS[t]}
             </button>
           ))}
         </nav>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-5">
+        <p className="mb-4 text-xs text-muted-foreground leading-relaxed">{TAB_HINTS[tab]}</p>
         {tab === "users" && <UsersPanel />}
         {tab === "positions" && <PositionsPanel />}
         {tab === "transactions" && <TransactionsPanel />}
@@ -105,7 +120,7 @@ function UsersPanel() {
     setBusy(true);
     try {
       await deleteUser({ data: { id: deleting.id } });
-      toast.success("User deleted");
+      toast.success("Utilisateur supprimé");
       setDeleting(null);
       q.refetch();
     } catch (e: any) {
@@ -137,7 +152,7 @@ function UsersPanel() {
           status: form.status,
         },
       });
-      toast.success("User updated");
+      toast.success("Utilisateur mis à jour");
       setEditing(null);
     } catch (e: any) {
       toast.error(e.message);
@@ -146,12 +161,12 @@ function UsersPanel() {
 
   const submitCreate = async () => {
     if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
-      return toast.error("All fields are required");
+      return toast.error("Tous les champs sont obligatoires");
     }
     setBusy(true);
     try {
       await createUser({ data: newUser });
-      toast.success("User created");
+      toast.success("Utilisateur créé");
       setCreating(false);
       setNewUser({ first_name: "", last_name: "", email: "", password: "" });
       q.refetch();
@@ -163,13 +178,14 @@ function UsersPanel() {
   };
 
 
+
   return (
     <div className="space-y-3">
       <button
         onClick={() => setCreating(true)}
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
       >
-        <UserPlus size={16} /> Create new user
+        <UserPlus size={16} /> Créer un nouvel utilisateur
       </button>
 
       {(q.data ?? []).map((u: any) => (
@@ -181,7 +197,7 @@ function UsersPanel() {
               <div className="mt-1 flex flex-wrap gap-1">
                 {u.roles.map((r: string) => (
                   <span key={r} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase">
-                    {r}
+                    {r === "admin" ? "Administrateur" : "Utilisateur"}
                   </span>
                 ))}
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10">{u.status}</span>
@@ -189,29 +205,29 @@ function UsersPanel() {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button onClick={() => openEdit(u)} className="text-xs px-3 py-1.5 rounded-md border border-border">
-                Edit
+                Modifier
               </button>
               <button
                 onClick={() => setDeleting({ id: u.id, name: u.display_name })}
                 className="text-xs px-3 py-1.5 rounded-md border border-destructive/50 text-destructive"
               >
-                Delete
+                Supprimer
               </button>
             </div>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-            <div><span className="text-muted-foreground">Balance:</span> {formatMoney(Number(u.balance), u.currency)}</div>
-            <div><span className="text-muted-foreground">Total P/L:</span> {formatMoney(Number(u.total_pl), u.currency, true)}</div>
+            <div><span className="text-muted-foreground">Solde :</span> {formatMoney(Number(u.balance), u.currency)}</div>
+            <div><span className="text-muted-foreground">P/L total :</span> {formatMoney(Number(u.total_pl), u.currency, true)}</div>
           </div>
           <label className="mt-3 flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-border/60 px-3 py-2">
-            <span className="text-xs">Require broker top-up before withdrawals</span>
+            <span className="text-xs">Bloquer les retraits (exiger une recharge du broker)</span>
             <input
               type="checkbox"
               checked={!!u.withdrawals_blocked}
               onChange={async (e) => {
                 try {
                   await upd.mutateAsync({ id: u.id, patch: { withdrawals_blocked: e.target.checked } });
-                  toast.success(e.target.checked ? "Withdrawals blocked" : "Withdrawals unlocked");
+                  toast.success(e.target.checked ? "Retraits bloqués" : "Retraits débloqués");
                 } catch (err: any) { toast.error(err.message); }
               }}
               className="h-5 w-5 accent-[var(--color-primary)]"
@@ -222,51 +238,51 @@ function UsersPanel() {
       ))}
 
       {editing && form && (
-        <Modal onClose={() => setEditing(null)} title="Edit user">
-          <TextField label="Display name" value={form.display_name} onChange={(v) => setForm({ ...form, display_name: v })} />
-          <TextField label="Balance (USD)" value={form.balance} onChange={(v) => setForm({ ...form, balance: v })} />
-          <TextField label="Total P/L (USD)" value={form.total_pl} onChange={(v) => setForm({ ...form, total_pl: v })} />
-          <TextField label="Status label (Real/Demo/...)" value={form.status} onChange={(v) => setForm({ ...form, status: v })} />
-          <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save</button>
+        <Modal onClose={() => setEditing(null)} title="Modifier l’utilisateur">
+          <TextField label="Nom affiché" value={form.display_name} onChange={(v) => setForm({ ...form, display_name: v })} />
+          <TextField label="Solde du compte (USD)" value={form.balance} onChange={(v) => setForm({ ...form, balance: v })} />
+          <TextField label="P/L total affiché (USD)" value={form.total_pl} onChange={(v) => setForm({ ...form, total_pl: v })} />
+          <TextField label="Type de compte (Real / Demo…)" value={form.status} onChange={(v) => setForm({ ...form, status: v })} />
+          <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Enregistrer</button>
         </Modal>
       )}
 
       {creating && (
-        <Modal onClose={() => setCreating(false)} title="Create user">
+        <Modal onClose={() => setCreating(false)} title="Créer un utilisateur">
           <div className="grid grid-cols-2 gap-2">
-            <TextField label="First name" value={newUser.first_name} onChange={(v) => setNewUser({ ...newUser, first_name: v })} />
-            <TextField label="Last name" value={newUser.last_name} onChange={(v) => setNewUser({ ...newUser, last_name: v })} />
+            <TextField label="Prénom" value={newUser.first_name} onChange={(v) => setNewUser({ ...newUser, first_name: v })} />
+            <TextField label="Nom" value={newUser.last_name} onChange={(v) => setNewUser({ ...newUser, last_name: v })} />
           </div>
-          <TextField label="Email" value={newUser.email} onChange={(v) => setNewUser({ ...newUser, email: v })} />
-          <TextField label="Password (min 8 chars)" value={newUser.password} onChange={(v) => setNewUser({ ...newUser, password: v })} />
+          <TextField label="Adresse e-mail" value={newUser.email} onChange={(v) => setNewUser({ ...newUser, email: v })} />
+          <TextField label="Mot de passe (8 caractères min.)" value={newUser.password} onChange={(v) => setNewUser({ ...newUser, password: v })} />
           <button
             onClick={submitCreate}
             disabled={busy}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
           >
-            {busy ? "Creating…" : "Create user"}
+            {busy ? "Création…" : "Créer l’utilisateur"}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            The user will be able to sign in immediately with this email and password.
+            L’utilisateur pourra se connecter immédiatement avec cet e-mail et ce mot de passe.
           </p>
         </Modal>
       )}
 
       {deleting && (
-        <Modal onClose={() => setDeleting(null)} title="Delete user">
+        <Modal onClose={() => setDeleting(null)} title="Supprimer l’utilisateur">
           <p className="text-sm text-muted-foreground">
-            This permanently deletes <span className="text-foreground font-semibold">{deleting.name}</span> and all of their
-            data (positions, transactions, notifications). This cannot be undone.
+            Cette action supprime définitivement <span className="text-foreground font-semibold">{deleting.name}</span> et
+            toutes ses données (positions, transactions, notifications). Elle est irréversible.
           </p>
           <button
             onClick={confirmDelete}
             disabled={busy}
             className="w-full py-3 rounded-xl bg-destructive text-destructive-foreground font-semibold text-sm disabled:opacity-60"
           >
-            {busy ? "Deleting…" : "Delete permanently"}
+            {busy ? "Suppression…" : "Supprimer définitivement"}
           </button>
           <button onClick={() => setDeleting(null)} className="w-full py-2.5 rounded-xl border border-border text-sm">
-            Cancel
+            Annuler
           </button>
         </Modal>
       )}
@@ -284,8 +300,14 @@ function PositionsPanel() {
   const setVerdict = async (id: string, verdict: "auto" | "force_win" | "force_loss", amount?: number) => {
     try {
       await upd.mutateAsync({ id, patch: { verdict, verdict_amount: amount ?? null } });
-      toast.success("Verdict set");
+      toast.success("Décision enregistrée");
     } catch (e: any) { toast.error(e.message); }
+  };
+
+  const verdictLabel: Record<string, string> = {
+    auto: "Automatique",
+    force_win: "Gain forcé",
+    force_loss: "Perte forcée",
   };
 
   const openList = useMemo(() => (q.data ?? []).filter((p) => p.status === "open"), [q.data]);
@@ -293,36 +315,43 @@ function PositionsPanel() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xs uppercase tracking-wider text-muted-foreground">Open positions ({openList.length})</h2>
+      <div className="rounded-xl border border-border/60 bg-surface/40 p-3 text-[11px] text-muted-foreground leading-relaxed">
+        Choisissez le résultat d’une position <span className="text-foreground font-semibold">avant</span> que le client ne la
+        ferme. « Gain forcé » ajoute le montant au solde du client, « Perte forcée » le retire, « Automatique » laisse le P/L
+        du marché s’appliquer.
+      </div>
+
+      <h2 className="text-xs uppercase tracking-wider text-muted-foreground">Positions ouvertes ({openList.length})</h2>
+      {openList.length === 0 && <p className="text-sm text-muted-foreground">Aucune position ouverte.</p>}
       {openList.map((p) => (
         <div key={p.id} className="rounded-xl border border-border/60 bg-surface/60 p-3">
           <div className="flex items-center justify-between text-sm">
             <div>
               <div className="font-semibold">{nameFor(p.user_id)}</div>
               <div className="text-[11px] text-muted-foreground">
-                {p.side} {Number(p.lot).toFixed(2)} @ {Number(p.open_price).toFixed(3)} · P/L {formatMoney(Number(p.pl), "USD", true)}
+                {p.symbol} · {p.side === "Buy" ? "Achat" : "Vente"} {Number(p.lot).toFixed(2)} lot @ {Number(p.open_price).toFixed(3)} · P/L {formatMoney(Number(p.pl), "USD", true)}
               </div>
             </div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 uppercase">{p.verdict}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10">{verdictLabel[p.verdict] ?? p.verdict}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1">
-            <button onClick={() => setVerdict(p.id, "auto")} className="text-[11px] px-2 py-1 rounded bg-background border border-border">Auto</button>
+            <button onClick={() => setVerdict(p.id, "auto")} className="text-[11px] px-2 py-1 rounded bg-background border border-border">Automatique</button>
             <button onClick={() => {
-              const a = prompt("Force WIN amount (USD)?", "5000");
+              const a = prompt("Montant du GAIN forcé (USD) ?", "5000");
               if (a) setVerdict(p.id, "force_win", Number(a));
-            }} className="text-[11px] px-2 py-1 rounded" style={{ background: "var(--color-profit)", color: "black" }}>Force win</button>
+            }} className="text-[11px] px-2 py-1 rounded font-semibold" style={{ background: "var(--color-profit)", color: "black" }}>Forcer un gain</button>
             <button onClick={() => {
-              const a = prompt("Force LOSS amount (USD)?", "5000");
+              const a = prompt("Montant de la PERTE forcée (USD) ?", "5000");
               if (a) setVerdict(p.id, "force_loss", Number(a));
-            }} className="text-[11px] px-2 py-1 rounded" style={{ background: "var(--color-loss)", color: "white" }}>Force loss</button>
+            }} className="text-[11px] px-2 py-1 rounded font-semibold" style={{ background: "var(--color-loss)", color: "white" }}>Forcer une perte</button>
           </div>
         </div>
       ))}
-      <h2 className="text-xs uppercase tracking-wider text-muted-foreground pt-2">Recent closed</h2>
+      <h2 className="text-xs uppercase tracking-wider text-muted-foreground pt-2">Positions fermées récentes</h2>
       {closedList.map((p) => (
         <div key={p.id} className="rounded-xl border border-border/60 p-3 text-sm">
           <div className="flex justify-between">
-            <span>{nameFor(p.user_id)} · {p.side} {Number(p.lot).toFixed(2)}</span>
+            <span>{nameFor(p.user_id)} · {p.symbol} · {p.side === "Buy" ? "Achat" : "Vente"} {Number(p.lot).toFixed(2)}</span>
             <span style={{ color: Number(p.pl) >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}>
               {formatMoney(Number(p.pl), "USD", true)}
             </span>
@@ -339,22 +368,29 @@ function TransactionsPanel() {
   const settle = useAdminSettleTransaction();
   const nameFor = (uid: string) => users.data?.find((u: any) => u.id === uid)?.display_name ?? uid.slice(0, 8);
 
+  const kindLabel = (k: string) => (k === "deposit" ? "Dépôt" : "Retrait");
+  const methodLabel = (m: string) =>
+    ({ bank_transfer: "Virement bancaire", card: "Carte bancaire", btc: "Bitcoin", usdt: "USDT" } as Record<string, string>)[m] ?? m;
+  const statusLabel = (s: string) =>
+    ({ approved: "Validé", rejected: "Refusé", pending: "En attente" } as Record<string, string>)[s] ?? s;
+
   return (
     <div className="space-y-3">
+      {(q.data ?? []).length === 0 && <p className="text-sm text-muted-foreground">Aucune transaction.</p>}
       {(q.data ?? []).map((t) => (
         <div key={t.id} className="rounded-xl border border-border/60 bg-surface/60 p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-sm font-semibold capitalize">{t.kind} · {t.method.replace("_", " ")}</div>
+              <div className="text-sm font-semibold">{kindLabel(t.kind)} · {methodLabel(t.method)}</div>
               <div className="text-[11px] text-muted-foreground truncate">{nameFor(t.user_id)}</div>
-              {t.reference && <div className="text-[11px] text-muted-foreground truncate">Ref: {t.reference}</div>}
-              {t.destination && <div className="text-[11px] text-muted-foreground truncate">To: {t.destination}</div>}
-              {t.card_last4 && <div className="text-[11px] text-muted-foreground">Card •••• {t.card_last4}</div>}
+              {t.reference && <div className="text-[11px] text-muted-foreground truncate">Référence : {t.reference}</div>}
+              {t.destination && <div className="text-[11px] text-muted-foreground truncate">Destinataire : {t.destination}</div>}
+              {t.card_last4 && <div className="text-[11px] text-muted-foreground">Carte •••• {t.card_last4}</div>}
             </div>
             <div className="text-right shrink-0">
               <div className="text-sm font-semibold tabular-nums">{formatMoney(Number(t.amount), t.currency)}</div>
               <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase mt-1 inline-block"
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded mt-1 inline-block"
                 style={{
                   background:
                     t.status === "approved"
@@ -364,7 +400,7 @@ function TransactionsPanel() {
                       : "rgba(255,255,255,0.08)",
                 }}
               >
-                {t.status}
+                {statusLabel(t.status)}
               </span>
             </div>
           </div>
@@ -375,17 +411,17 @@ function TransactionsPanel() {
                 className="flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
                 style={{ background: "var(--color-profit)", color: "black" }}
               >
-                <Check size={14} /> Approve
+                <Check size={14} /> Valider
               </button>
               <button
                 onClick={() => {
-                  const n = prompt("Rejection reason (optional)") ?? undefined;
+                  const n = prompt("Motif du refus (facultatif)") ?? undefined;
                   settle.mutate({ tx: t, approve: false, note: n });
                 }}
                 className="flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
                 style={{ background: "var(--color-loss)", color: "white" }}
               >
-                <X size={14} /> Reject
+                <X size={14} /> Refuser
               </button>
             </div>
           )}
@@ -401,7 +437,7 @@ function SettingsPanel() {
   const [form, setForm] = useState<any>(null);
 
   const current = form ?? q.data;
-  if (!current) return <div className="text-sm text-muted-foreground">Loading…</div>;
+  if (!current) return <div className="text-sm text-muted-foreground">Chargement…</div>;
 
   const set = (k: string, v: string | boolean) => setForm({ ...current, [k]: v });
 
@@ -409,19 +445,56 @@ function SettingsPanel() {
     try {
       const { id: _id, updated_at: _u, ...patch } = current;
       await upd.mutateAsync(patch);
-      toast.success("Settings saved");
+      toast.success("Paramètres enregistrés");
     } catch (e: any) { toast.error(e.message); }
   };
 
+  const TIMEZONES: { value: string; label: string }[] = [
+    { value: "UTC", label: "UTC (temps universel)" },
+    { value: "Europe/Paris", label: "France — Paris" },
+    { value: "Europe/Brussels", label: "Belgique — Bruxelles" },
+    { value: "Europe/Zurich", label: "Suisse — Zurich" },
+    { value: "Europe/London", label: "Royaume-Uni — Londres" },
+    { value: "Europe/Lisbon", label: "Portugal — Lisbonne" },
+    { value: "Europe/Madrid", label: "Espagne — Madrid" },
+    { value: "Africa/Abidjan", label: "Côte d’Ivoire — Abidjan" },
+    { value: "Africa/Dakar", label: "Sénégal — Dakar" },
+    { value: "Africa/Douala", label: "Cameroun — Douala" },
+    { value: "Africa/Casablanca", label: "Maroc — Casablanca" },
+    { value: "America/Montreal", label: "Canada — Montréal" },
+    { value: "America/New_York", label: "États-Unis — New York" },
+    { value: "Asia/Dubai", label: "Émirats — Dubaï" },
+  ];
+
   return (
     <div className="space-y-3">
-      <TextField label="Brand name" value={current.brand_name ?? ""} onChange={(v) => set("brand_name", v)} />
-      <TextField label="Notification email (for admin alerts)" value={current.notification_email ?? ""} onChange={(v) => set("notification_email", v)} />
+      <TextField label="Nom de la marque" value={current.brand_name ?? ""} onChange={(v) => set("brand_name", v)} />
+      <TextField
+        label="E-mail de réception des notifications (admin)"
+        value={current.notification_email ?? ""}
+        onChange={(v) => set("notification_email", v)}
+      />
+
+      <div className="rounded-xl border border-border/60 p-3 space-y-2">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Fuseau horaire du site</div>
+        <p className="text-[11px] text-muted-foreground">
+          Sert uniquement à afficher l’heure dans les e-mails de notification.
+        </p>
+        <select
+          value={current.timezone ?? "UTC"}
+          onChange={(e) => set("timezone", e.target.value)}
+          className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {TIMEZONES.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Broker top-up</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Recharge du broker</div>
         <label className="flex items-center justify-between gap-3 cursor-pointer">
-          <span className="text-sm">Require “Recharger le broker” before withdrawals</span>
+          <span className="text-sm">Exiger une recharge du broker avant tout retrait (tous les comptes)</span>
           <input
             type="checkbox"
             checked={!!current.broker_topup_enabled}
@@ -429,23 +502,23 @@ function SettingsPanel() {
             className="h-5 w-5 accent-[var(--color-primary)]"
           />
         </label>
-        <TextField label="Broker address" value={current.broker_address ?? ""} onChange={(v) => set("broker_address", v)} />
-        <TextField label="QR code image URL (optional — generated from address if empty)" value={current.broker_qr_url ?? ""} onChange={(v) => set("broker_qr_url", v)} />
+        <TextField label="Adresse du broker" value={current.broker_address ?? ""} onChange={(v) => set("broker_address", v)} />
+        <TextField label="URL de l’image du QR code (facultatif — généré depuis l’adresse si vide)" value={current.broker_qr_url ?? ""} onChange={(v) => set("broker_qr_url", v)} />
       </div>
 
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Bank transfer</div>
-        <TextField label="Bank name" value={current.deposit_bank_name ?? ""} onChange={(v) => set("deposit_bank_name", v)} />
-        <TextField label="Beneficiary" value={current.deposit_bank_beneficiary ?? ""} onChange={(v) => set("deposit_bank_beneficiary", v)} />
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Virement bancaire</div>
+        <TextField label="Nom de la banque" value={current.deposit_bank_name ?? ""} onChange={(v) => set("deposit_bank_name", v)} />
+        <TextField label="Bénéficiaire" value={current.deposit_bank_beneficiary ?? ""} onChange={(v) => set("deposit_bank_beneficiary", v)} />
         <TextField label="IBAN" value={current.deposit_iban ?? ""} onChange={(v) => set("deposit_iban", v)} />
       </div>
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Crypto addresses</div>
-        <TextField label="BTC address" value={current.deposit_btc_address ?? ""} onChange={(v) => set("deposit_btc_address", v)} />
-        <TextField label="USDT (TRC20) address" value={current.deposit_usdt_address ?? ""} onChange={(v) => set("deposit_usdt_address", v)} />
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Adresses crypto</div>
+        <TextField label="Adresse BTC" value={current.deposit_btc_address ?? ""} onChange={(v) => set("deposit_btc_address", v)} />
+        <TextField label="Adresse USDT (TRC20)" value={current.deposit_usdt_address ?? ""} onChange={(v) => set("deposit_usdt_address", v)} />
       </div>
 
-      <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save settings</button>
+      <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Enregistrer les paramètres</button>
     </div>
   );
 }

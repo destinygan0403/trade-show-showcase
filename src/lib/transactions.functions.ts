@@ -40,8 +40,9 @@ export const submitTransaction = createServerFn({ method: "POST" })
       .select("email,display_name")
       .eq("id", userId)
       .maybeSingle();
-    const { sendTransactionalEmail, getAdminNotificationEmail, formatUtc } = await import("./email.server");
-    const adminEmail = await getAdminNotificationEmail();
+    const { sendTransactionalEmail, getMailConfig, formatInTz } = await import("./email.server");
+    const mailCfg = await getMailConfig();
+    const adminEmail = mailCfg.email;
     const methodLabel = {
       bank_transfer: "Bank transfer",
       card: "Debit / credit card",
@@ -145,7 +146,7 @@ export const submitTransaction = createServerFn({ method: "POST" })
             ...(data.destination ? [{ label: "Destination", value: data.destination }] : []),
             ...(data.card_last4 ? [{ label: "Card", value: `•••• ${data.card_last4}` }] : []),
             ...(data.reference ? [{ label: "Your reference", value: data.reference }] : []),
-            { label: "Processed at", value: formatUtc() },
+            { label: "Processed at", value: formatInTz(mailCfg.timezone) },
             { label: "New balance", value: `${newBalance.toFixed(2)} ${currency}`, accent: "profit" },
           ],
           reference: inserted?.id ?? undefined,

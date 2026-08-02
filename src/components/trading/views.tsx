@@ -111,7 +111,7 @@ function MtPositionRow({
     <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-4 py-3 border-b border-border/40">
       <div className="min-w-0">
         <div className="text-[15px] leading-tight">
-          <span className="font-semibold text-white">XAUUSDm </span>
+          <span className="font-semibold text-white">{pos.symbol ?? "XAUUSD"} </span>
           <span style={{ color: sideColor }} className="font-medium">
             {pos.side.toLowerCase()} {Number(pos.lot).toFixed(2)}
           </span>
