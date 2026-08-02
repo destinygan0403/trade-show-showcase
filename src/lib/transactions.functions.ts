@@ -30,7 +30,7 @@ export const submitTransaction = createServerFn({ method: "POST" })
       .maybeSingle();
     if (pErr) throw new Error(pErr.message);
     if (!prof) throw new Error("Profile not found");
-    if (!prof.verified) throw new Error("Compte non vérifié — en attente de validation par l'administrateur");
+    if (!prof.verified) throw new Error("Compte non vérifié — en attente de validation");
 
 
     const balance = Number(prof.balance);

@@ -131,7 +131,7 @@ export function Dashboard() {
 
   const requireVerified = () => {
     if (verified) return true;
-    toast.error("Compte non vérifié — en attente de validation par l'administrateur");
+    toast.error("Compte non vérifié — en attente de validation");
     return false;
   };
 

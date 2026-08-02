@@ -22,7 +22,7 @@ export const openPosition = createServerFn({ method: "POST" })
     const userId = context.userId;
 
     const { data: vProf } = await supabaseAdmin.from("profiles").select("verified").eq("id", userId).maybeSingle();
-    if (!vProf?.verified) throw new Error("Compte non vérifié — en attente de validation par l'administrateur");
+    if (!vProf?.verified) throw new Error("Compte non vérifié — en attente de validation");
 
 
     if (data.stake > 0) {
