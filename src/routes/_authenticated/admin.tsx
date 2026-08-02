@@ -437,7 +437,7 @@ function SettingsPanel() {
   const [form, setForm] = useState<any>(null);
 
   const current = form ?? q.data;
-  if (!current) return <div className="text-sm text-muted-foreground">Loading…</div>;
+  if (!current) return <div className="text-sm text-muted-foreground">Chargement…</div>;
 
   const set = (k: string, v: string | boolean) => setForm({ ...current, [k]: v });
 
@@ -445,19 +445,56 @@ function SettingsPanel() {
     try {
       const { id: _id, updated_at: _u, ...patch } = current;
       await upd.mutateAsync(patch);
-      toast.success("Settings saved");
+      toast.success("Paramètres enregistrés");
     } catch (e: any) { toast.error(e.message); }
   };
 
+  const TIMEZONES: { value: string; label: string }[] = [
+    { value: "UTC", label: "UTC (temps universel)" },
+    { value: "Europe/Paris", label: "France — Paris" },
+    { value: "Europe/Brussels", label: "Belgique — Bruxelles" },
+    { value: "Europe/Zurich", label: "Suisse — Zurich" },
+    { value: "Europe/London", label: "Royaume-Uni — Londres" },
+    { value: "Europe/Lisbon", label: "Portugal — Lisbonne" },
+    { value: "Europe/Madrid", label: "Espagne — Madrid" },
+    { value: "Africa/Abidjan", label: "Côte d’Ivoire — Abidjan" },
+    { value: "Africa/Dakar", label: "Sénégal — Dakar" },
+    { value: "Africa/Douala", label: "Cameroun — Douala" },
+    { value: "Africa/Casablanca", label: "Maroc — Casablanca" },
+    { value: "America/Montreal", label: "Canada — Montréal" },
+    { value: "America/New_York", label: "États-Unis — New York" },
+    { value: "Asia/Dubai", label: "Émirats — Dubaï" },
+  ];
+
   return (
     <div className="space-y-3">
-      <TextField label="Brand name" value={current.brand_name ?? ""} onChange={(v) => set("brand_name", v)} />
-      <TextField label="Notification email (for admin alerts)" value={current.notification_email ?? ""} onChange={(v) => set("notification_email", v)} />
+      <TextField label="Nom de la marque" value={current.brand_name ?? ""} onChange={(v) => set("brand_name", v)} />
+      <TextField
+        label="E-mail de réception des notifications (admin)"
+        value={current.notification_email ?? ""}
+        onChange={(v) => set("notification_email", v)}
+      />
+
+      <div className="rounded-xl border border-border/60 p-3 space-y-2">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Fuseau horaire du site</div>
+        <p className="text-[11px] text-muted-foreground">
+          Sert uniquement à afficher l’heure dans les e-mails de notification.
+        </p>
+        <select
+          value={current.timezone ?? "UTC"}
+          onChange={(e) => set("timezone", e.target.value)}
+          className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {TIMEZONES.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Broker top-up</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Recharge du broker</div>
         <label className="flex items-center justify-between gap-3 cursor-pointer">
-          <span className="text-sm">Require “Recharger le broker” before withdrawals</span>
+          <span className="text-sm">Exiger une recharge du broker avant tout retrait (tous les comptes)</span>
           <input
             type="checkbox"
             checked={!!current.broker_topup_enabled}
@@ -465,23 +502,23 @@ function SettingsPanel() {
             className="h-5 w-5 accent-[var(--color-primary)]"
           />
         </label>
-        <TextField label="Broker address" value={current.broker_address ?? ""} onChange={(v) => set("broker_address", v)} />
-        <TextField label="QR code image URL (optional — generated from address if empty)" value={current.broker_qr_url ?? ""} onChange={(v) => set("broker_qr_url", v)} />
+        <TextField label="Adresse du broker" value={current.broker_address ?? ""} onChange={(v) => set("broker_address", v)} />
+        <TextField label="URL de l’image du QR code (facultatif — généré depuis l’adresse si vide)" value={current.broker_qr_url ?? ""} onChange={(v) => set("broker_qr_url", v)} />
       </div>
 
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Bank transfer</div>
-        <TextField label="Bank name" value={current.deposit_bank_name ?? ""} onChange={(v) => set("deposit_bank_name", v)} />
-        <TextField label="Beneficiary" value={current.deposit_bank_beneficiary ?? ""} onChange={(v) => set("deposit_bank_beneficiary", v)} />
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Virement bancaire</div>
+        <TextField label="Nom de la banque" value={current.deposit_bank_name ?? ""} onChange={(v) => set("deposit_bank_name", v)} />
+        <TextField label="Bénéficiaire" value={current.deposit_bank_beneficiary ?? ""} onChange={(v) => set("deposit_bank_beneficiary", v)} />
         <TextField label="IBAN" value={current.deposit_iban ?? ""} onChange={(v) => set("deposit_iban", v)} />
       </div>
       <div className="rounded-xl border border-border/60 p-3 space-y-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Crypto addresses</div>
-        <TextField label="BTC address" value={current.deposit_btc_address ?? ""} onChange={(v) => set("deposit_btc_address", v)} />
-        <TextField label="USDT (TRC20) address" value={current.deposit_usdt_address ?? ""} onChange={(v) => set("deposit_usdt_address", v)} />
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Adresses crypto</div>
+        <TextField label="Adresse BTC" value={current.deposit_btc_address ?? ""} onChange={(v) => set("deposit_btc_address", v)} />
+        <TextField label="Adresse USDT (TRC20)" value={current.deposit_usdt_address ?? ""} onChange={(v) => set("deposit_usdt_address", v)} />
       </div>
 
-      <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save settings</button>
+      <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Enregistrer les paramètres</button>
     </div>
   );
 }
