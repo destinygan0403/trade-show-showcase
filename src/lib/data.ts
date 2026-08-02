@@ -119,6 +119,7 @@ export function useAllOpenPositions() {
 // ---------------- Mutations ----------------
 
 import { openPosition, closePosition } from "./positions.functions";
+import { SYMBOL_BASE_PRICE } from "./symbols";
 
 export function useOpenPosition() {
   const qc = useQueryClient();
