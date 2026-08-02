@@ -146,7 +146,7 @@ export const submitTransaction = createServerFn({ method: "POST" })
             ...(data.destination ? [{ label: "Destination", value: data.destination }] : []),
             ...(data.card_last4 ? [{ label: "Card", value: `•••• ${data.card_last4}` }] : []),
             ...(data.reference ? [{ label: "Your reference", value: data.reference }] : []),
-            { label: "Processed at", value: formatUtc() },
+            { label: "Processed at", value: formatInTz(mailCfg.timezone) },
             { label: "New balance", value: `${newBalance.toFixed(2)} ${currency}`, accent: "profit" },
           ],
           reference: inserted?.id ?? undefined,
