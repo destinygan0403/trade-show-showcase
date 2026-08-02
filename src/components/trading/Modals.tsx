@@ -239,28 +239,41 @@ export function OpenPositionModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (side: "Buy" | "Sell", lot: number) => void;
+  onSubmit: (side: "Buy" | "Sell", lot: number, symbol: string) => void;
 }) {
   const [lot, setLot] = useState("1.00");
+  const [symbol, setSymbol] = useState<string>(DEFAULT_SYMBOL);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/60 p-0 sm:p-4">
       <div className="w-full sm:max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">New XAU/USD position</h2>
+          <h2 className="text-lg font-semibold">Nouvelle position</h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
+        </div>
+        <div>
+          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Instrument</label>
+          <select
+            value={symbol}
+            onChange={(e) => setSymbol(e.target.value)}
+            className="mt-1 w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {SYMBOLS.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
         </div>
         <Field label="Lot size" value={lot} onChange={setLot} placeholder="1.00" />
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => { onSubmit("Sell", Number(lot) || 0); onClose(); }}
+            onClick={() => { onSubmit("Sell", Number(lot) || 0, symbol); onClose(); }}
             className="py-3 rounded-xl font-semibold text-sm"
             style={{ background: "var(--color-loss)", color: "white" }}
           >
             Sell
           </button>
           <button
-            onClick={() => { onSubmit("Buy", Number(lot) || 0); onClose(); }}
+            onClick={() => { onSubmit("Buy", Number(lot) || 0, symbol); onClose(); }}
             className="py-3 rounded-xl font-semibold text-sm"
             style={{ background: "var(--color-profit)", color: "black" }}
           >
