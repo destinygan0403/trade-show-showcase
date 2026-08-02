@@ -65,6 +65,7 @@ export const openPosition = createServerFn({ method: "POST" })
             { label: "Side", value: data.side, accent: data.side === "Buy" ? "profit" : "loss" },
             { label: "Volume", value: `${data.lot.toFixed(2)} lot` },
             { label: "Open price", value: data.open_price.toFixed(3) },
+            ...(data.stake > 0 ? [{ label: "Invested amount", value: data.stake.toFixed(2) }] : []),
             { label: "Executed at", value: formatInTz(cfg.timezone, inserted?.opened_at ?? Date.now()) },
           ],
           reference: inserted?.id ?? undefined,
