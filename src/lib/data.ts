@@ -64,7 +64,43 @@ export function useMyTransactions(userId: string | undefined) {
   });
 }
 
+export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
+
+export function useMyNotifications(userId: string | undefined) {
+  return useQuery({
+    enabled: !!userId,
+    queryKey: ["notifications", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as Notification[];
+    },
+    refetchInterval: 20000,
+  });
+}
+
+export function useMarkNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", userId)
+        .eq("read", false);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+}
+
 export function useAppSettings() {
+
   return useQuery({
     queryKey: ["settings"],
     queryFn: async () => {
@@ -134,6 +170,7 @@ export function useOpenPosition() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["positions"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -148,6 +185,7 @@ export function useClosePosition() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["positions"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }

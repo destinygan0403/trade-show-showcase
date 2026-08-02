@@ -50,6 +50,12 @@ export const openPosition = createServerFn({ method: "POST" })
       const { error: dErr } = await supabaseAdmin.rpc("apply_balance_only", { _user_id: userId, _delta: -data.stake });
       if (dErr) throw new Error(dErr.message);
     }
+    await supabaseAdmin.from("notifications").insert({
+      user_id: userId,
+      title: `Position ouverte — ${data.side} ${data.symbol}`,
+      body: `${data.side} ${data.lot.toFixed(2)} lot à ${data.open_price.toFixed(3)}${data.stake > 0 ? ` · montant investi ${data.stake.toFixed(2)}` : ""}.`,
+    });
+
 
     const { data: prof } = await supabaseAdmin.from("profiles").select("email,display_name").eq("id", userId).maybeSingle();
     if (prof?.email) {
@@ -140,6 +146,13 @@ export const closePosition = createServerFn({ method: "POST" })
     });
     if (rpcErr) throw new Error(rpcErr.message);
     const newBalance = newBalanceRaw === null || newBalanceRaw === undefined ? undefined : Number(newBalanceRaw);
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: userId,
+      title: `Position fermée — ${pl >= 0 ? "Gain" : "Perte"} ${pl >= 0 ? "+" : ""}${pl.toFixed(2)}`,
+      body: `${pos.side} ${Number(pos.lot).toFixed(2)} lot ${pos.symbol} clôturée à ${closePrice.toFixed(3)}.`,
+    });
+
 
     const { data: prof } = await supabaseAdmin
       .from("profiles")
