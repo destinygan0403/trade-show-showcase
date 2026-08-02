@@ -79,7 +79,7 @@ export const openPosition = createServerFn({ method: "POST" })
 
 export const closePosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { positionId: string }) => {
+  .inputValidator((input: { positionId: string; client_pl?: number }) => {
     if (!input?.positionId) throw new Error("Missing positionId");
     return input;
   })
@@ -97,14 +97,20 @@ export const closePosition = createServerFn({ method: "POST" })
     if (pos.user_id !== userId) throw new Error("Forbidden");
     if (pos.status !== "open") throw new Error("Position already closed");
 
+    const stake = Number((pos as { stake?: number }).stake ?? 0) || 0;
     let pl = Number(pos.pl);
     const closePrice = Number(pos.current_price);
     if (pos.verdict === "force_win") {
       pl = Math.abs(Number(pos.verdict_amount ?? 5000));
     } else if (pos.verdict === "force_loss") {
       pl = -Math.abs(Number(pos.verdict_amount ?? 5000));
+    } else if (Number.isFinite(Number(data.client_pl))) {
+      // No admin verdict: settle on the live (floating) P/L shown to the user.
+      pl = Number(data.client_pl);
     }
     if (!Number.isFinite(pl)) pl = 0;
+    // A losing position can never cost more than the invested amount.
+    if (stake > 0 && pl < -stake) pl = -stake;
 
     const closedAt = new Date().toISOString();
     // Guard against double-close races: only the update that still sees the
@@ -118,8 +124,12 @@ export const closePosition = createServerFn({ method: "POST" })
     if (uErr) throw new Error(uErr.message);
     if (!updatedRows || updatedRows.length === 0) throw new Error("Position already closed");
 
-    // Atomic credit/debit — avoids lost updates when several positions are
-    // closed at the same time (read-modify-write used to drop the gains).
+    // Give the invested margin back (balance only, not counted as P/L)…
+    if (stake > 0) {
+      const { error: rErr } = await supabaseAdmin.rpc("apply_balance_only", { _user_id: userId, _delta: stake });
+      if (rErr) throw new Error(rErr.message);
+    }
+    // …then apply the realized result atomically (balance + total P/L).
     const { data: newBalanceRaw, error: rpcErr } = await supabaseAdmin.rpc("apply_balance_delta", {
       _user_id: userId,
       _delta: pl,
