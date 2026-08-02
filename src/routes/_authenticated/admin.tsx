@@ -185,7 +185,7 @@ function UsersPanel() {
         onClick={() => setCreating(true)}
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
       >
-        <UserPlus size={16} /> Create new user
+        <UserPlus size={16} /> Créer un nouvel utilisateur
       </button>
 
       {(q.data ?? []).map((u: any) => (
@@ -197,7 +197,7 @@ function UsersPanel() {
               <div className="mt-1 flex flex-wrap gap-1">
                 {u.roles.map((r: string) => (
                   <span key={r} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase">
-                    {r}
+                    {r === "admin" ? "Administrateur" : "Utilisateur"}
                   </span>
                 ))}
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10">{u.status}</span>
@@ -205,29 +205,29 @@ function UsersPanel() {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button onClick={() => openEdit(u)} className="text-xs px-3 py-1.5 rounded-md border border-border">
-                Edit
+                Modifier
               </button>
               <button
                 onClick={() => setDeleting({ id: u.id, name: u.display_name })}
                 className="text-xs px-3 py-1.5 rounded-md border border-destructive/50 text-destructive"
               >
-                Delete
+                Supprimer
               </button>
             </div>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-            <div><span className="text-muted-foreground">Balance:</span> {formatMoney(Number(u.balance), u.currency)}</div>
-            <div><span className="text-muted-foreground">Total P/L:</span> {formatMoney(Number(u.total_pl), u.currency, true)}</div>
+            <div><span className="text-muted-foreground">Solde :</span> {formatMoney(Number(u.balance), u.currency)}</div>
+            <div><span className="text-muted-foreground">P/L total :</span> {formatMoney(Number(u.total_pl), u.currency, true)}</div>
           </div>
           <label className="mt-3 flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-border/60 px-3 py-2">
-            <span className="text-xs">Require broker top-up before withdrawals</span>
+            <span className="text-xs">Bloquer les retraits (exiger une recharge du broker)</span>
             <input
               type="checkbox"
               checked={!!u.withdrawals_blocked}
               onChange={async (e) => {
                 try {
                   await upd.mutateAsync({ id: u.id, patch: { withdrawals_blocked: e.target.checked } });
-                  toast.success(e.target.checked ? "Withdrawals blocked" : "Withdrawals unlocked");
+                  toast.success(e.target.checked ? "Retraits bloqués" : "Retraits débloqués");
                 } catch (err: any) { toast.error(err.message); }
               }}
               className="h-5 w-5 accent-[var(--color-primary)]"
@@ -238,51 +238,51 @@ function UsersPanel() {
       ))}
 
       {editing && form && (
-        <Modal onClose={() => setEditing(null)} title="Edit user">
-          <TextField label="Display name" value={form.display_name} onChange={(v) => setForm({ ...form, display_name: v })} />
-          <TextField label="Balance (USD)" value={form.balance} onChange={(v) => setForm({ ...form, balance: v })} />
-          <TextField label="Total P/L (USD)" value={form.total_pl} onChange={(v) => setForm({ ...form, total_pl: v })} />
-          <TextField label="Status label (Real/Demo/...)" value={form.status} onChange={(v) => setForm({ ...form, status: v })} />
-          <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save</button>
+        <Modal onClose={() => setEditing(null)} title="Modifier l’utilisateur">
+          <TextField label="Nom affiché" value={form.display_name} onChange={(v) => setForm({ ...form, display_name: v })} />
+          <TextField label="Solde du compte (USD)" value={form.balance} onChange={(v) => setForm({ ...form, balance: v })} />
+          <TextField label="P/L total affiché (USD)" value={form.total_pl} onChange={(v) => setForm({ ...form, total_pl: v })} />
+          <TextField label="Type de compte (Real / Demo…)" value={form.status} onChange={(v) => setForm({ ...form, status: v })} />
+          <button onClick={save} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Enregistrer</button>
         </Modal>
       )}
 
       {creating && (
-        <Modal onClose={() => setCreating(false)} title="Create user">
+        <Modal onClose={() => setCreating(false)} title="Créer un utilisateur">
           <div className="grid grid-cols-2 gap-2">
-            <TextField label="First name" value={newUser.first_name} onChange={(v) => setNewUser({ ...newUser, first_name: v })} />
-            <TextField label="Last name" value={newUser.last_name} onChange={(v) => setNewUser({ ...newUser, last_name: v })} />
+            <TextField label="Prénom" value={newUser.first_name} onChange={(v) => setNewUser({ ...newUser, first_name: v })} />
+            <TextField label="Nom" value={newUser.last_name} onChange={(v) => setNewUser({ ...newUser, last_name: v })} />
           </div>
-          <TextField label="Email" value={newUser.email} onChange={(v) => setNewUser({ ...newUser, email: v })} />
-          <TextField label="Password (min 8 chars)" value={newUser.password} onChange={(v) => setNewUser({ ...newUser, password: v })} />
+          <TextField label="Adresse e-mail" value={newUser.email} onChange={(v) => setNewUser({ ...newUser, email: v })} />
+          <TextField label="Mot de passe (8 caractères min.)" value={newUser.password} onChange={(v) => setNewUser({ ...newUser, password: v })} />
           <button
             onClick={submitCreate}
             disabled={busy}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
           >
-            {busy ? "Creating…" : "Create user"}
+            {busy ? "Création…" : "Créer l’utilisateur"}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            The user will be able to sign in immediately with this email and password.
+            L’utilisateur pourra se connecter immédiatement avec cet e-mail et ce mot de passe.
           </p>
         </Modal>
       )}
 
       {deleting && (
-        <Modal onClose={() => setDeleting(null)} title="Delete user">
+        <Modal onClose={() => setDeleting(null)} title="Supprimer l’utilisateur">
           <p className="text-sm text-muted-foreground">
-            This permanently deletes <span className="text-foreground font-semibold">{deleting.name}</span> and all of their
-            data (positions, transactions, notifications). This cannot be undone.
+            Cette action supprime définitivement <span className="text-foreground font-semibold">{deleting.name}</span> et
+            toutes ses données (positions, transactions, notifications). Elle est irréversible.
           </p>
           <button
             onClick={confirmDelete}
             disabled={busy}
             className="w-full py-3 rounded-xl bg-destructive text-destructive-foreground font-semibold text-sm disabled:opacity-60"
           >
-            {busy ? "Deleting…" : "Delete permanently"}
+            {busy ? "Suppression…" : "Supprimer définitivement"}
           </button>
           <button onClick={() => setDeleting(null)} className="w-full py-2.5 rounded-xl border border-border text-sm">
-            Cancel
+            Annuler
           </button>
         </Modal>
       )}
