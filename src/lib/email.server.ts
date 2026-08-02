@@ -145,8 +145,19 @@ export async function sendTransactionalEmail(opts: {
 }
 
 
-export async function getAdminNotificationEmail(): Promise<string | null> {
+export async function getMailConfig(): Promise<{ email: string | null; timezone: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("app_settings").select("notification_email").eq("id", 1).maybeSingle();
-  return (data?.notification_email as string | null) ?? null;
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("notification_email, timezone")
+    .eq("id", 1)
+    .maybeSingle();
+  return {
+    email: (data?.notification_email as string | null) ?? null,
+    timezone: (data?.timezone as string | null) ?? "UTC",
+  };
+}
+
+export async function getAdminNotificationEmail(): Promise<string | null> {
+  return (await getMailConfig()).email;
 }
