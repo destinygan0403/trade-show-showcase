@@ -170,6 +170,7 @@ export function useOpenPosition() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["positions"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -184,6 +185,7 @@ export function useClosePosition() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["positions"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
