@@ -162,9 +162,17 @@ export function Dashboard() {
           <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 pt-6 pb-4">
             <h1 onClick={onSecretTap} className="text-3xl font-bold tracking-tight truncate select-none cursor-default">Accounts</h1>
             <div className="flex items-center gap-2 shrink-0">
-              <IconBtn onClick={() => toast("No new notifications")}>
-                <Bell size={18} />
+              <IconBtn onClick={() => setNotifOpen(true)}>
+                <span className="relative inline-flex">
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-primary text-[10px] font-bold leading-4 text-white text-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </span>
               </IconBtn>
+
               <IconBtn onClick={() => setNavKey("Profile")}>
                 <User size={18} />
               </IconBtn>
