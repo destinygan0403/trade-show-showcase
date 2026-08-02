@@ -206,13 +206,14 @@ export function Dashboard() {
               </div>
 
               <div className="mt-5 grid grid-cols-3 gap-2">
-                <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => setOpenModal(true)} />
-                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => setBrokerModal(true)} />
+                <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => { if (requireVerified()) setOpenModal(true); }} />
+                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => { if (requireVerified()) setBrokerModal(true); }} />
                 <Action
                   icon={<ArrowUpFromLine size={18} />}
                   label="Withdraw"
-                  onClick={() => setTxModal("withdrawal")}
+                  onClick={() => { if (requireVerified()) setTxModal("withdrawal"); }}
                 />
+
               </div>
             </div>
           </section>
