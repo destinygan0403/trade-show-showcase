@@ -216,11 +216,6 @@ export function TransactionModal({
         {locked && (
           <div className="mt-4 rounded-xl border p-4" style={{ borderColor: "color-mix(in oklch, var(--color-loss) 45%, transparent)", background: "color-mix(in oklch, var(--color-loss) 12%, transparent)" }}>
             <div className="text-sm font-semibold text-center">Recharger le broker de 10% de la somme du retrait</div>
-            {Number(amount) > 0 && (
-              <p className="mt-1 text-xs text-center text-muted-foreground leading-relaxed">
-                Montant à recharger : {(Number(amount) * 0.10).toFixed(2)} USD
-              </p>
-            )}
             <button
               onClick={() => { onClose(); onTopUp?.(); }}
               className="mt-3 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
