@@ -100,10 +100,10 @@ export function Dashboard() {
   };
 
 
-  const submitNew = (side: "Buy" | "Sell", lot: number) => {
+  const submitNew = (side: "Buy" | "Sell", lot: number, symbol: string) => {
     if (!userId || !lot) return;
-    openPos.mutate({ userId, side, lot }, {
-      onSuccess: () => toast.success(`${side} ${lot.toFixed(2)} lot opened`),
+    openPos.mutate({ userId, side, lot, symbol }, {
+      onSuccess: () => toast.success(`${side} ${lot.toFixed(2)} lot ${symbol}`),
       onError: (e: any) => toast.error(e.message),
     });
   };
