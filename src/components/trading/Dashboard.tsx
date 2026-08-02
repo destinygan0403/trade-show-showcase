@@ -51,7 +51,7 @@ export function Dashboard() {
   const history = transactions.data ?? [];
   const delTx = useAdminDeleteTransaction();
   const withdrawalsBlocked = !!profile.data?.withdrawals_blocked;
-  const verified = !!(profile.data as any)?.verified;
+  const verified = !!profile.data?.verified;
 
 
   const [tab, setTab] = useState<Tab>("Open");
