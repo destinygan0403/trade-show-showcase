@@ -34,6 +34,20 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Tab = "users" | "positions" | "transactions" | "settings";
 
+const TAB_LABELS: Record<Tab, string> = {
+  users: "Utilisateurs",
+  positions: "Positions",
+  transactions: "Transactions",
+  settings: "Paramètres",
+};
+
+const TAB_HINTS: Record<Tab, string> = {
+  users: "Créer, modifier ou supprimer des comptes, ajuster le solde et bloquer les retraits.",
+  positions: "Décider du résultat des positions ouvertes : gain forcé, perte forcée ou automatique.",
+  transactions: "Suivre les dépôts et retraits de tous les comptes.",
+  settings: "Marque, e-mail de notification, fuseau horaire et coordonnées de paiement.",
+};
+
 function AdminPage() {
   const nav = useNavigate();
   const { user } = useSession();
@@ -46,8 +60,8 @@ function AdminPage() {
       <div className="min-h-screen grid place-items-center px-5 text-center">
         <div>
           <ShieldCheck size={40} className="mx-auto text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">Admins only.</p>
-          <button onClick={() => nav({ to: "/dashboard" })} className="mt-4 text-sm text-primary">Back to app</button>
+          <p className="mt-3 text-sm text-muted-foreground">Accès réservé aux administrateurs.</p>
+          <button onClick={() => nav({ to: "/dashboard" })} className="mt-4 text-sm text-primary">Retour à l’application</button>
         </div>
       </div>
     );
@@ -61,24 +75,25 @@ function AdminPage() {
           <button onClick={() => nav({ to: "/dashboard" })} className="p-2 rounded-full hover:bg-accent">
             <ArrowLeft size={18} />
           </button>
-          <h1 className="text-lg font-bold">Admin Console</h1>
+          <h1 className="text-lg font-bold">Espace administrateur</h1>
         </div>
         <nav className="max-w-3xl mx-auto flex gap-1 px-2 pb-1 overflow-x-auto">
           {(["users", "positions", "transactions", "settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-3 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition ${
+              className={`px-3 py-2 text-xs font-semibold tracking-wide rounded-md transition whitespace-nowrap ${
                 tab === t ? "bg-primary/20 text-primary" : "text-muted-foreground"
               }`}
             >
-              {t}
+              {TAB_LABELS[t]}
             </button>
           ))}
         </nav>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-5">
+        <p className="mb-4 text-xs text-muted-foreground leading-relaxed">{TAB_HINTS[tab]}</p>
         {tab === "users" && <UsersPanel />}
         {tab === "positions" && <PositionsPanel />}
         {tab === "transactions" && <TransactionsPanel />}
