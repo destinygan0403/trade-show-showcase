@@ -6,18 +6,25 @@ type Side = "Buy" | "Sell";
 
 export const openPosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { side: Side; lot: number; open_price: number; symbol?: string }) => {
+  .inputValidator((input: { side: Side; lot: number; open_price: number; symbol?: string; stake?: number }) => {
     if (input.side !== "Buy" && input.side !== "Sell") throw new Error("Invalid side");
     const lot = Number(input.lot);
     const price = Number(input.open_price);
     if (!Number.isFinite(lot) || lot <= 0) throw new Error("Invalid lot");
     if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid price");
+    const stake = Number(input.stake ?? 0);
+    if (!Number.isFinite(stake) || stake < 0) throw new Error("Montant investi invalide");
     const symbol = input.symbol && isTradableSymbol(input.symbol) ? input.symbol : DEFAULT_SYMBOL;
-    return { side: input.side, lot, open_price: price, symbol };
+    return { side: input.side, lot, open_price: price, symbol, stake };
   })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
+
+    if (data.stake > 0) {
+      const { data: bal } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).maybeSingle();
+      if (!bal || Number(bal.balance) < data.stake) throw new Error("Solde insuffisant pour ouvrir cette position");
+    }
 
     const { data: inserted, error } = await supabaseAdmin
       .from("positions")
@@ -26,12 +33,19 @@ export const openPosition = createServerFn({ method: "POST" })
         symbol: data.symbol,
         side: data.side,
         lot: data.lot,
+        stake: data.stake,
         open_price: data.open_price,
         current_price: data.open_price,
       })
       .select("id, opened_at")
       .maybeSingle();
     if (error) throw new Error(error.message);
+
+    // Margin is debited from the balance right away (credited back on close).
+    if (data.stake > 0) {
+      const { error: dErr } = await supabaseAdmin.rpc("apply_balance_only", { _user_id: userId, _delta: -data.stake });
+      if (dErr) throw new Error(dErr.message);
+    }
 
     const { data: prof } = await supabaseAdmin.from("profiles").select("email,display_name").eq("id", userId).maybeSingle();
     if (prof?.email) {
