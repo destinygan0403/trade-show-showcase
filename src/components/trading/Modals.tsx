@@ -3,6 +3,7 @@ import { X, Copy, Check as CheckIcon, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import { useAppSettings, useMyProfile, useRequestTransaction } from "@/lib/data";
+import { SYMBOLS, DEFAULT_SYMBOL } from "@/lib/symbols";
 
 /* ---------- Broker top-up (single deposit method / blocked withdrawals) ---------- */
 export function BrokerTopUpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
