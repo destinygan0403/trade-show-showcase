@@ -240,9 +240,10 @@ export function OpenPositionModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (side: "Buy" | "Sell", lot: number, symbol: string) => void;
+  onSubmit: (side: "Buy" | "Sell", lot: number, symbol: string, stake: number) => void;
 }) {
   const [lot, setLot] = useState("1.00");
+  const [stake, setStake] = useState("1000");
   const [symbol, setSymbol] = useState<string>(DEFAULT_SYMBOL);
   if (!open) return null;
   return (
