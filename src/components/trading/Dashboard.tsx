@@ -260,9 +260,18 @@ export function Dashboard() {
               </div>
 
               <div className="border-t border-border/60">
-                {tab === "Open" && (
-                  <SymbolSummary symbol="XAU/USD" count={openPositions.length} totalPL={totalOpenPL} currency={currency} />
-                )}
+                {tab === "Open" && Array.from(new Set(openPositions.map((x) => x.symbol))).map((sym) => {
+                  const group = openPositions.filter((x) => x.symbol === sym);
+                  return (
+                    <SymbolSummary
+                      key={sym}
+                      symbol={sym}
+                      count={group.length}
+                      totalPL={group.reduce((a, x) => a + x.live_pl, 0)}
+                      currency={currency}
+                    />
+                  );
+                })}
                 {list.map((pos) => (
                   <PositionRow
                     key={pos.id}
