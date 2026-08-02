@@ -266,16 +266,20 @@ export function OpenPositionModal({
           </select>
         </div>
         <Field label="Lot size" value={lot} onChange={setLot} placeholder="1.00" />
+        <Field label="Montant investi (marge)" value={stake} onChange={setStake} placeholder="1000" />
+        <p className="text-[11px] text-muted-foreground">
+          Le montant investi est déduit du solde à l'ouverture, puis restitué avec le résultat à la clôture.
+        </p>
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => { onSubmit("Sell", Number(lot) || 0, symbol); onClose(); }}
+            onClick={() => { onSubmit("Sell", Number(lot) || 0, symbol, Number(stake) || 0); onClose(); }}
             className="py-3 rounded-xl font-semibold text-sm"
             style={{ background: "var(--color-loss)", color: "white" }}
           >
             Sell
           </button>
           <button
-            onClick={() => { onSubmit("Buy", Number(lot) || 0, symbol); onClose(); }}
+            onClick={() => { onSubmit("Buy", Number(lot) || 0, symbol, Number(stake) || 0); onClose(); }}
             className="py-3 rounded-xl font-semibold text-sm"
             style={{ background: "var(--color-profit)", color: "black" }}
           >
