@@ -355,9 +355,10 @@ export function Dashboard() {
           balance={balance}
           currency={currency}
           openPositions={openPositions}
-          onNewOrder={() => setOpenModal(true)}
+          onNewOrder={() => { if (requireVerified()) setOpenModal(true); }}
           onCloseAll={closeAll}
           onClose={(pos) => {
+            if (!requireVerified()) return;
             closePos.mutate({ ...(pos as any), client_pl: (pos as any).live_pl }, {
               onSuccess: () => toast.success("Position closed"),
               onError: (e: any) => toast.error(e.message),
