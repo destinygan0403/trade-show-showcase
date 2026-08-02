@@ -100,6 +100,7 @@ export type Database = {
           opened_at: string
           pl: number
           side: Database["public"]["Enums"]["position_side"]
+          stake: number
           status: Database["public"]["Enums"]["position_status"]
           symbol: string
           user_id: string
@@ -116,6 +117,7 @@ export type Database = {
           opened_at?: string
           pl?: number
           side: Database["public"]["Enums"]["position_side"]
+          stake?: number
           status?: Database["public"]["Enums"]["position_status"]
           symbol?: string
           user_id: string
@@ -132,6 +134,7 @@ export type Database = {
           opened_at?: string
           pl?: number
           side?: Database["public"]["Enums"]["position_side"]
+          stake?: number
           status?: Database["public"]["Enums"]["position_status"]
           symbol?: string
           user_id?: string
@@ -257,6 +260,10 @@ export type Database = {
     }
     Functions: {
       apply_balance_delta: {
+        Args: { _delta: number; _user_id: string }
+        Returns: number
+      }
+      apply_balance_only: {
         Args: { _delta: number; _user_id: string }
         Returns: number
       }
