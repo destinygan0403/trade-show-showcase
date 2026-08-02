@@ -27,6 +27,7 @@ export type Database = {
           deposit_usdt_address: string | null
           id: number
           notification_email: string | null
+          timezone: string
           updated_at: string
         }
         Insert: {
@@ -41,6 +42,7 @@ export type Database = {
           deposit_usdt_address?: string | null
           id?: number
           notification_email?: string | null
+          timezone?: string
           updated_at?: string
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           deposit_usdt_address?: string | null
           id?: number
           notification_email?: string | null
+          timezone?: string
           updated_at?: string
         }
         Relationships: []
@@ -253,6 +256,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_balance_delta: {
+        Args: { _delta: number; _user_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
