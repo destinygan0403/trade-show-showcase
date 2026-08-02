@@ -1,17 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isTradableSymbol, DEFAULT_SYMBOL } from "./symbols";
 
 type Side = "Buy" | "Sell";
 
 export const openPosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { side: Side; lot: number; open_price: number }) => {
+  .inputValidator((input: { side: Side; lot: number; open_price: number; symbol?: string }) => {
     if (input.side !== "Buy" && input.side !== "Sell") throw new Error("Invalid side");
     const lot = Number(input.lot);
     const price = Number(input.open_price);
     if (!Number.isFinite(lot) || lot <= 0) throw new Error("Invalid lot");
     if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid price");
-    return { side: input.side, lot, open_price: price };
+    const symbol = input.symbol && isTradableSymbol(input.symbol) ? input.symbol : DEFAULT_SYMBOL;
+    return { side: input.side, lot, open_price: price, symbol };
   })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -21,6 +23,7 @@ export const openPosition = createServerFn({ method: "POST" })
       .from("positions")
       .insert({
         user_id: userId,
+        symbol: data.symbol,
         side: data.side,
         lot: data.lot,
         open_price: data.open_price,
@@ -32,23 +35,23 @@ export const openPosition = createServerFn({ method: "POST" })
 
     const { data: prof } = await supabaseAdmin.from("profiles").select("email,display_name").eq("id", userId).maybeSingle();
     if (prof?.email) {
-      const { sendTransactionalEmail, getAdminNotificationEmail, formatUtc } = await import("./email.server");
-      const admin = await getAdminNotificationEmail();
+      const { sendTransactionalEmail, getMailConfig, formatInTz } = await import("./email.server");
+      const cfg = await getMailConfig();
       await sendTransactionalEmail({
         to: prof.email,
-        adminEmail: admin,
-        subject: `Position opened — ${data.side} ${data.lot.toFixed(2)} lot XAU/USD`,
+        adminEmail: cfg.email,
+        subject: `Position opened — ${data.side} ${data.lot.toFixed(2)} lot ${data.symbol}`,
         payload: {
           title: "Position opened",
-          preheader: `Your ${data.side} order on XAU/USD has been executed.`,
+          preheader: `Your ${data.side} order on ${data.symbol} has been executed.`,
           greeting: `Hello ${prof.display_name ?? "trader"},`,
-          intro: `Your market order has been executed successfully on XAU/USD. The position is now open and its P/L will update in real time on your dashboard.`,
+          intro: `Your market order has been executed successfully on ${data.symbol}. The position is now open and its P/L will update in real time on your dashboard.`,
           rows: [
-            { label: "Symbol", value: "XAU/USD" },
+            { label: "Symbol", value: data.symbol },
             { label: "Side", value: data.side, accent: data.side === "Buy" ? "profit" : "loss" },
             { label: "Volume", value: `${data.lot.toFixed(2)} lot` },
             { label: "Open price", value: data.open_price.toFixed(3) },
-            { label: "Executed at", value: formatUtc(inserted?.opened_at ?? Date.now()) },
+            { label: "Executed at", value: formatInTz(cfg.timezone, inserted?.opened_at ?? Date.now()) },
           ],
           reference: inserted?.id ?? undefined,
           footerNote: "Keep an eye on this position from the dashboard. You can close it at any moment from the Open tab.",
@@ -86,62 +89,70 @@ export const closePosition = createServerFn({ method: "POST" })
     } else if (pos.verdict === "force_loss") {
       pl = -Math.abs(Number(pos.verdict_amount ?? 5000));
     }
+    if (!Number.isFinite(pl)) pl = 0;
 
     const closedAt = new Date().toISOString();
-    const { error: uErr } = await supabaseAdmin
+    // Guard against double-close races: only the update that still sees the
+    // position as "open" wins, and only that one credits the balance.
+    const { data: updatedRows, error: uErr } = await supabaseAdmin
       .from("positions")
       .update({ status: "closed", closed_at: closedAt, close_price: closePrice, pl })
-      .eq("id", pos.id);
+      .eq("id", pos.id)
+      .eq("status", "open")
+      .select("id");
     if (uErr) throw new Error(uErr.message);
+    if (!updatedRows || updatedRows.length === 0) throw new Error("Position already closed");
+
+    // Atomic credit/debit — avoids lost updates when several positions are
+    // closed at the same time (read-modify-write used to drop the gains).
+    const { data: newBalanceRaw, error: rpcErr } = await supabaseAdmin.rpc("apply_balance_delta", {
+      _user_id: userId,
+      _delta: pl,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
+    const newBalance = newBalanceRaw === null || newBalanceRaw === undefined ? undefined : Number(newBalanceRaw);
 
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("email,display_name,balance,total_pl,currency")
+      .select("email,display_name,currency")
       .eq("id", userId)
       .maybeSingle();
 
-    let newBalance: number | undefined;
-    if (prof) {
-      newBalance = Number(prof.balance) + pl;
-      await supabaseAdmin
-        .from("profiles")
-        .update({ balance: newBalance, total_pl: Number(prof.total_pl) + pl })
-        .eq("id", userId);
-    }
-
     if (prof?.email) {
-      const { sendTransactionalEmail, getAdminNotificationEmail, formatUtc } = await import("./email.server");
-      const admin = await getAdminNotificationEmail();
+      const { sendTransactionalEmail, getMailConfig, formatInTz } = await import("./email.server");
+      const cfg = await getMailConfig();
       const currency = prof.currency ?? "USD";
+      const symbol = String(pos.symbol ?? "XAUUSD");
       const openedAt = new Date(pos.opened_at as string);
       const durationMs = Date.now() - openedAt.getTime();
       const mins = Math.max(1, Math.round(durationMs / 60000));
       const durationLabel = mins < 60 ? `${mins} min` : `${(mins / 60).toFixed(1)} h`;
       await sendTransactionalEmail({
         to: prof.email,
-        adminEmail: admin,
+        adminEmail: cfg.email,
         subject: `Position closed — ${pl >= 0 ? "+" : ""}${pl.toFixed(2)} ${currency}`,
         payload: {
           title: "Position closed",
-          preheader: `Your ${pos.side} XAU/USD position has been closed.`,
+          preheader: `Your ${pos.side} ${symbol} position has been closed.`,
           greeting: `Hello ${prof.display_name ?? "trader"},`,
-          intro: `Your ${pos.side} position on XAU/USD has been closed. The realized P/L has been credited to your trading balance.`,
+          intro: `Your ${pos.side} position on ${symbol} has been closed. The realized P/L has been credited to your trading balance.`,
           rows: [
-            { label: "Symbol", value: "XAU/USD" },
+            { label: "Symbol", value: symbol },
             { label: "Side", value: String(pos.side), accent: pos.side === "Buy" ? "profit" : "loss" },
             { label: "Volume", value: `${Number(pos.lot).toFixed(2)} lot` },
             { label: "Open price", value: Number(pos.open_price).toFixed(3) },
             { label: "Close price", value: closePrice.toFixed(3) },
             { label: "Duration", value: durationLabel },
+            { label: "Closed at", value: formatInTz(cfg.timezone, closedAt) },
             { label: "Realized P/L", value: `${pl >= 0 ? "+" : ""}${pl.toFixed(2)} ${currency}`, accent: pl >= 0 ? "profit" : "loss" },
-            newBalance !== undefined
-              ? { label: "New balance", value: `${newBalance.toFixed(2)} ${currency}` }
-              : { label: "Closed at", value: formatUtc(closedAt) },
+            ...(newBalance !== undefined
+              ? [{ label: "New balance", value: `${newBalance.toFixed(2)} ${currency}` }]
+              : []),
           ],
           reference: pos.id,
         },
       });
     }
 
-    return { ok: true, pl, close_price: closePrice };
+    return { ok: true, pl, close_price: closePrice, new_balance: newBalance ?? null };
   });
