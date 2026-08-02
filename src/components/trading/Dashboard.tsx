@@ -56,8 +56,12 @@ export function Dashboard() {
 
   const [tab, setTab] = useState<Tab>("Open");
   const [navKey, setNavKey] = useState<NavKey>("Accounts");
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifItems = useNotificationItems(userId);
+  const unreadCount = notifItems.filter((n) => n.unread).length;
   const [txModal, setTxModal] = useState<null | "deposit" | "withdrawal">(null);
   const [openModal, setOpenModal] = useState(false);
+
   const [brokerModal, setBrokerModal] = useState(false);
   const [txDetail, setTxDetail] = useState<Transaction | null>(null);
 
