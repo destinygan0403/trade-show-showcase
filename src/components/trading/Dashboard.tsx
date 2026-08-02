@@ -59,10 +59,36 @@ export function Dashboard() {
   const [brokerModal, setBrokerModal] = useState(false);
   const [txDetail, setTxDetail] = useState<Transaction | null>(null);
 
-  // Client-side live drift on current_price for visual pop only.
-  const [drift, setDrift] = useState(0);
+  // Live floating P/L engine.
+  // - No admin verdict yet  -> the P/L oscillates between red and green.
+  // - Admin forced win/loss -> the P/L slowly glides toward the target amount.
+  const positionsRef = useRef<Position[]>([]);
+  positionsRef.current = positions.data ?? [];
+  const [liveMap, setLiveMap] = useState<Record<string, { pl: number; price: number }>>({});
   useEffect(() => {
-    const id = setInterval(() => setDrift((d) => d + (Math.random() - 0.5) * 0.4), 1200);
+    const id = setInterval(() => {
+      setLiveMap((prev) => {
+        const next: Record<string, { pl: number; price: number }> = {};
+        for (const pos of positionsRef.current) {
+          if (pos.status !== "open") continue;
+          const stake = Number((pos as any).stake ?? 0) || Number(pos.lot) * 100;
+          const cur = prev[pos.id] ?? { pl: 0, price: Number(pos.open_price) };
+          let pl = cur.pl;
+          if (pos.verdict === "force_win" || pos.verdict === "force_loss") {
+            const raw = Math.abs(Number(pos.verdict_amount ?? stake)) || stake;
+            const target = pos.verdict === "force_win" ? raw : -raw;
+            pl = pl + (target - pl) * 0.05 + (Math.random() - 0.5) * raw * 0.008;
+          } else {
+            const amp = Math.max(stake * 0.25, 5);
+            pl = pl * 0.88 + (Math.random() - 0.5) * amp * 0.5;
+          }
+          const dir = pos.side === "Sell" ? -1 : 1;
+          const price = Number(pos.open_price) * (1 + (pl / Math.max(stake, 1)) * 0.004 * dir);
+          next[pos.id] = { pl, price };
+        }
+        return next;
+      });
+    }, 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -71,13 +97,14 @@ export function Dashboard() {
   const balance = Number(p?.balance ?? 0);
   const currency = p?.currency ?? "USD";
   const realPositions = (positions.data ?? []).map((pos) => {
-    const base = Number(pos.current_price);
-    const live = pos.status === "open" ? Number((base + drift * 0.3).toFixed(3)) : base;
-    const dir = pos.side === "Sell" ? -1 : 1;
-    const livePl = pos.status === "open"
-      ? Number(pos.pl) + (live - base) * dir * Number(pos.lot) * 100
-      : Number(pos.pl);
-    return { ...pos, live_price: live, live_pl: livePl, is_fake: false as const };
+    const live = liveMap[pos.id];
+    const isOpen = pos.status === "open";
+    return {
+      ...pos,
+      live_price: isOpen && live ? Number(live.price.toFixed(3)) : Number(pos.current_price),
+      live_pl: isOpen && live ? live.pl : Number(pos.pl),
+      is_fake: false as const,
+    };
   });
 
   const openPositions = realPositions.filter((x) => x.status === "open");
