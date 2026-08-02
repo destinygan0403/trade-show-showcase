@@ -300,8 +300,14 @@ function PositionsPanel() {
   const setVerdict = async (id: string, verdict: "auto" | "force_win" | "force_loss", amount?: number) => {
     try {
       await upd.mutateAsync({ id, patch: { verdict, verdict_amount: amount ?? null } });
-      toast.success("Verdict set");
+      toast.success("Décision enregistrée");
     } catch (e: any) { toast.error(e.message); }
+  };
+
+  const verdictLabel: Record<string, string> = {
+    auto: "Automatique",
+    force_win: "Gain forcé",
+    force_loss: "Perte forcée",
   };
 
   const openList = useMemo(() => (q.data ?? []).filter((p) => p.status === "open"), [q.data]);
@@ -309,36 +315,43 @@ function PositionsPanel() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xs uppercase tracking-wider text-muted-foreground">Open positions ({openList.length})</h2>
+      <div className="rounded-xl border border-border/60 bg-surface/40 p-3 text-[11px] text-muted-foreground leading-relaxed">
+        Choisissez le résultat d’une position <span className="text-foreground font-semibold">avant</span> que le client ne la
+        ferme. « Gain forcé » ajoute le montant au solde du client, « Perte forcée » le retire, « Automatique » laisse le P/L
+        du marché s’appliquer.
+      </div>
+
+      <h2 className="text-xs uppercase tracking-wider text-muted-foreground">Positions ouvertes ({openList.length})</h2>
+      {openList.length === 0 && <p className="text-sm text-muted-foreground">Aucune position ouverte.</p>}
       {openList.map((p) => (
         <div key={p.id} className="rounded-xl border border-border/60 bg-surface/60 p-3">
           <div className="flex items-center justify-between text-sm">
             <div>
               <div className="font-semibold">{nameFor(p.user_id)}</div>
               <div className="text-[11px] text-muted-foreground">
-                {p.side} {Number(p.lot).toFixed(2)} @ {Number(p.open_price).toFixed(3)} · P/L {formatMoney(Number(p.pl), "USD", true)}
+                {p.symbol} · {p.side === "Buy" ? "Achat" : "Vente"} {Number(p.lot).toFixed(2)} lot @ {Number(p.open_price).toFixed(3)} · P/L {formatMoney(Number(p.pl), "USD", true)}
               </div>
             </div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 uppercase">{p.verdict}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10">{verdictLabel[p.verdict] ?? p.verdict}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1">
-            <button onClick={() => setVerdict(p.id, "auto")} className="text-[11px] px-2 py-1 rounded bg-background border border-border">Auto</button>
+            <button onClick={() => setVerdict(p.id, "auto")} className="text-[11px] px-2 py-1 rounded bg-background border border-border">Automatique</button>
             <button onClick={() => {
-              const a = prompt("Force WIN amount (USD)?", "5000");
+              const a = prompt("Montant du GAIN forcé (USD) ?", "5000");
               if (a) setVerdict(p.id, "force_win", Number(a));
-            }} className="text-[11px] px-2 py-1 rounded" style={{ background: "var(--color-profit)", color: "black" }}>Force win</button>
+            }} className="text-[11px] px-2 py-1 rounded font-semibold" style={{ background: "var(--color-profit)", color: "black" }}>Forcer un gain</button>
             <button onClick={() => {
-              const a = prompt("Force LOSS amount (USD)?", "5000");
+              const a = prompt("Montant de la PERTE forcée (USD) ?", "5000");
               if (a) setVerdict(p.id, "force_loss", Number(a));
-            }} className="text-[11px] px-2 py-1 rounded" style={{ background: "var(--color-loss)", color: "white" }}>Force loss</button>
+            }} className="text-[11px] px-2 py-1 rounded font-semibold" style={{ background: "var(--color-loss)", color: "white" }}>Forcer une perte</button>
           </div>
         </div>
       ))}
-      <h2 className="text-xs uppercase tracking-wider text-muted-foreground pt-2">Recent closed</h2>
+      <h2 className="text-xs uppercase tracking-wider text-muted-foreground pt-2">Positions fermées récentes</h2>
       {closedList.map((p) => (
         <div key={p.id} className="rounded-xl border border-border/60 p-3 text-sm">
           <div className="flex justify-between">
-            <span>{nameFor(p.user_id)} · {p.side} {Number(p.lot).toFixed(2)}</span>
+            <span>{nameFor(p.user_id)} · {p.symbol} · {p.side === "Buy" ? "Achat" : "Vente"} {Number(p.lot).toFixed(2)}</span>
             <span style={{ color: Number(p.pl) >= 0 ? "var(--color-profit)" : "var(--color-loss)" }}>
               {formatMoney(Number(p.pl), "USD", true)}
             </span>
