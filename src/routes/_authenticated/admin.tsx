@@ -120,7 +120,7 @@ function UsersPanel() {
     setBusy(true);
     try {
       await deleteUser({ data: { id: deleting.id } });
-      toast.success("User deleted");
+      toast.success("Utilisateur supprimé");
       setDeleting(null);
       q.refetch();
     } catch (e: any) {
@@ -152,7 +152,7 @@ function UsersPanel() {
           status: form.status,
         },
       });
-      toast.success("User updated");
+      toast.success("Utilisateur mis à jour");
       setEditing(null);
     } catch (e: any) {
       toast.error(e.message);
@@ -161,12 +161,12 @@ function UsersPanel() {
 
   const submitCreate = async () => {
     if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
-      return toast.error("All fields are required");
+      return toast.error("Tous les champs sont obligatoires");
     }
     setBusy(true);
     try {
       await createUser({ data: newUser });
-      toast.success("User created");
+      toast.success("Utilisateur créé");
       setCreating(false);
       setNewUser({ first_name: "", last_name: "", email: "", password: "" });
       q.refetch();
@@ -176,6 +176,7 @@ function UsersPanel() {
       setBusy(false);
     }
   };
+
 
 
   return (
