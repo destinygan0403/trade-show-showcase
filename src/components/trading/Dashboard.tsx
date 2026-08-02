@@ -129,8 +129,15 @@ export function Dashboard() {
   };
 
 
+  const requireVerified = () => {
+    if (verified) return true;
+    toast.error("Compte non vérifié — en attente de validation par l'administrateur");
+    return false;
+  };
+
   const submitNew = (side: "Buy" | "Sell", lot: number, symbol: string, stake: number) => {
     if (!userId || !lot) return;
+    if (!requireVerified()) return;
     openPos.mutate({ userId, side, lot, symbol, stake }, {
       onSuccess: () => toast.success(`${side} ${lot.toFixed(2)} lot ${symbol}`),
       onError: (e: any) => toast.error(e.message),
@@ -138,6 +145,7 @@ export function Dashboard() {
   };
 
   const closeAll = () => {
+    if (!requireVerified()) return;
     const open = (positions.data ?? []).filter((x) => x.status === "open");
     if (open.length === 0) return toast("No open positions");
     open.forEach((pos) =>
@@ -145,6 +153,7 @@ export function Dashboard() {
     );
     toast.success(`Closing ${open.length} position${open.length > 1 ? "s" : ""}`);
   };
+
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
