@@ -28,6 +28,7 @@ import {
   useMyProfile,
   useMyTransactions,
   useOpenPosition,
+  type Position,
   type Transaction,
 } from "@/lib/data";
 import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
@@ -127,9 +128,9 @@ export function Dashboard() {
   };
 
 
-  const submitNew = (side: "Buy" | "Sell", lot: number, symbol: string) => {
+  const submitNew = (side: "Buy" | "Sell", lot: number, symbol: string, stake: number) => {
     if (!userId || !lot) return;
-    openPos.mutate({ userId, side, lot, symbol }, {
+    openPos.mutate({ userId, side, lot, symbol, stake }, {
       onSuccess: () => toast.success(`${side} ${lot.toFixed(2)} lot ${symbol}`),
       onError: (e: any) => toast.error(e.message),
     });
@@ -139,7 +140,7 @@ export function Dashboard() {
     const open = (positions.data ?? []).filter((x) => x.status === "open");
     if (open.length === 0) return toast("No open positions");
     open.forEach((pos) =>
-      closePos.mutate(pos, { onError: (e: any) => toast.error(e.message) }),
+      closePos.mutate({ ...pos, client_pl: liveMap[pos.id]?.pl ?? Number(pos.pl) }, { onError: (e: any) => toast.error(e.message) }),
     );
     toast.success(`Closing ${open.length} position${open.length > 1 ? "s" : ""}`);
   };
@@ -310,7 +311,7 @@ export function Dashboard() {
                     pl={pos.live_pl}
                     currency={currency}
                     canClose={pos.status === "open"}
-                    onClose={() => closePos.mutate(pos, {
+                    onClose={() => closePos.mutate({ ...pos, client_pl: pos.live_pl }, {
                       onSuccess: () => toast.success("Position closed"),
                       onError: (e: any) => toast.error(e.message),
                     })}
@@ -336,7 +337,7 @@ export function Dashboard() {
           onNewOrder={() => setOpenModal(true)}
           onCloseAll={closeAll}
           onClose={(pos) => {
-            closePos.mutate(pos as any, {
+            closePos.mutate({ ...(pos as any), client_pl: (pos as any).live_pl }, {
               onSuccess: () => toast.success("Position closed"),
               onError: (e: any) => toast.error(e.message),
             });
