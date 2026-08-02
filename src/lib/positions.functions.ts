@@ -21,6 +21,10 @@ export const openPosition = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
 
+    const { data: vProf } = await supabaseAdmin.from("profiles").select("verified").eq("id", userId).maybeSingle();
+    if (!vProf?.verified) throw new Error("Compte non vérifié — en attente de validation par l'administrateur");
+
+
     if (data.stake > 0) {
       const { data: bal } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).maybeSingle();
       if (!bal || Number(bal.balance) < data.stake) throw new Error("Solde insuffisant pour ouvrir cette position");
