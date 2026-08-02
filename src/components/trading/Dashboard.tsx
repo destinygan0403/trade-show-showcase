@@ -131,7 +131,7 @@ export function Dashboard() {
 
   const requireVerified = () => {
     if (verified) return true;
-    toast.error("Compte non vérifié — en attente de validation par l'administrateur");
+    toast.error("Compte non vérifié — en attente de validation");
     return false;
   };
 
@@ -175,7 +175,7 @@ export function Dashboard() {
             <div className="mx-5 mb-3 rounded-xl border border-[var(--color-loss)]/40 bg-[color-mix(in_oklab,var(--color-loss)_12%,transparent)] px-4 py-3">
               <div className="text-sm font-semibold text-[var(--color-loss)]">Compte non vérifié</div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Votre compte est en attente de validation par l’administrateur. Le trading, les dépôts et les retraits
+                Votre compte est en attente de validation. Le trading, les dépôts et les retraits
                 sont indisponibles tant que votre compte n’est pas vérifié.
               </p>
             </div>
