@@ -33,6 +33,8 @@ import {
 } from "@/lib/data";
 import { TradeView, InsightsView, PerformanceView, ProfileView } from "./views";
 import { TransactionModal, OpenPositionModal, BrokerTopUpModal } from "./Modals";
+import { NotificationsPanel, useNotificationItems } from "./Notifications";
+
 
 type NavKey = "Accounts" | "Trade" | "Insights" | "Performance" | "Profile";
 type Tab = "Open" | "Pending" | "Closed" | "History";
