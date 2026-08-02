@@ -215,10 +215,12 @@ export function TransactionModal({
 
         {locked && (
           <div className="mt-4 rounded-xl border p-4" style={{ borderColor: "color-mix(in oklch, var(--color-loss) 45%, transparent)", background: "color-mix(in oklch, var(--color-loss) 12%, transparent)" }}>
-            <div className="text-sm font-semibold">Retrait momentanément indisponible</div>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Votre marge de courtage est insuffisante pour libérer les retraits. Rechargez le broker pour débloquer vos moyens de retrait.
-            </p>
+            <div className="text-sm font-semibold text-center">Recharger le broker de 10% de la somme du retrait</div>
+            {Number(amount) > 0 && (
+              <p className="mt-1 text-xs text-center text-muted-foreground leading-relaxed">
+                Montant à recharger : {(Number(amount) * 0.10).toFixed(2)} USD
+              </p>
+            )}
             <button
               onClick={() => { onClose(); onTopUp?.(); }}
               className="mt-3 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
@@ -267,9 +269,6 @@ export function OpenPositionModal({
         </div>
         <Field label="Lot size" value={lot} onChange={setLot} placeholder="1.00" />
         <Field label="Montant investi (marge)" value={stake} onChange={setStake} placeholder="1000" />
-        <p className="text-[11px] text-muted-foreground">
-          Le montant investi est déduit du solde à l'ouverture, puis restitué avec le résultat à la clôture.
-        </p>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => { onSubmit("Sell", Number(lot) || 0, symbol, Number(stake) || 0); onClose(); }}
