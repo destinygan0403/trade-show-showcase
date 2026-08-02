@@ -30,7 +30,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
     // Ensure profile display_name reflects provided name (handle_new_user trigger uses metadata fallback)
     if (created?.user?.id) {
-      await supabaseAdmin.from("profiles").update({ display_name }).eq("id", created.user.id);
+      await supabaseAdmin.from("profiles").update({ display_name, verified: true }).eq("id", created.user.id);
     }
 
     return { ok: true, id: created?.user?.id ?? null };

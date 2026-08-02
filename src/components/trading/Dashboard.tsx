@@ -51,6 +51,7 @@ export function Dashboard() {
   const history = transactions.data ?? [];
   const delTx = useAdminDeleteTransaction();
   const withdrawalsBlocked = !!profile.data?.withdrawals_blocked;
+  const verified = !!(profile.data as any)?.verified;
 
 
   const [tab, setTab] = useState<Tab>("Open");
@@ -128,8 +129,15 @@ export function Dashboard() {
   };
 
 
+  const requireVerified = () => {
+    if (verified) return true;
+    toast.error("Compte non vérifié — en attente de validation par l'administrateur");
+    return false;
+  };
+
   const submitNew = (side: "Buy" | "Sell", lot: number, symbol: string, stake: number) => {
     if (!userId || !lot) return;
+    if (!requireVerified()) return;
     openPos.mutate({ userId, side, lot, symbol, stake }, {
       onSuccess: () => toast.success(`${side} ${lot.toFixed(2)} lot ${symbol}`),
       onError: (e: any) => toast.error(e.message),
@@ -137,6 +145,7 @@ export function Dashboard() {
   };
 
   const closeAll = () => {
+    if (!requireVerified()) return;
     const open = (positions.data ?? []).filter((x) => x.status === "open");
     if (open.length === 0) return toast("No open positions");
     open.forEach((pos) =>
@@ -144,6 +153,7 @@ export function Dashboard() {
     );
     toast.success(`Closing ${open.length} position${open.length > 1 ? "s" : ""}`);
   };
+
 
   return (
     <div className="min-h-screen mx-auto max-w-md pb-32">
@@ -160,6 +170,16 @@ export function Dashboard() {
               </IconBtn>
             </div>
           </header>
+
+          {!profile.isLoading && !verified && (
+            <div className="mx-5 mb-3 rounded-xl border border-[var(--color-loss)]/40 bg-[color-mix(in_oklab,var(--color-loss)_12%,transparent)] px-4 py-3">
+              <div className="text-sm font-semibold text-[var(--color-loss)]">Compte non vérifié</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Votre compte est en attente de validation par l’administrateur. Le trading, les dépôts et les retraits
+                sont indisponibles tant que votre compte n’est pas vérifié.
+              </p>
+            </div>
+          )}
 
 
           <section className="px-5">
@@ -196,13 +216,14 @@ export function Dashboard() {
               </div>
 
               <div className="mt-5 grid grid-cols-3 gap-2">
-                <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => setOpenModal(true)} />
-                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => setBrokerModal(true)} />
+                <Action icon={<TrendingUp size={18} />} label="Trade" primary onClick={() => { if (requireVerified()) setOpenModal(true); }} />
+                <Action icon={<ArrowDownToLine size={18} />} label="Deposit" onClick={() => { if (requireVerified()) setBrokerModal(true); }} />
                 <Action
                   icon={<ArrowUpFromLine size={18} />}
                   label="Withdraw"
-                  onClick={() => setTxModal("withdrawal")}
+                  onClick={() => { if (requireVerified()) setTxModal("withdrawal"); }}
                 />
+
               </div>
             </div>
           </section>
@@ -334,9 +355,10 @@ export function Dashboard() {
           balance={balance}
           currency={currency}
           openPositions={openPositions}
-          onNewOrder={() => setOpenModal(true)}
+          onNewOrder={() => { if (requireVerified()) setOpenModal(true); }}
           onCloseAll={closeAll}
           onClose={(pos) => {
+            if (!requireVerified()) return;
             closePos.mutate({ ...(pos as any), client_pl: (pos as any).live_pl }, {
               onSuccess: () => toast.success("Position closed"),
               onError: (e: any) => toast.error(e.message),

@@ -25,11 +25,13 @@ export const submitTransaction = createServerFn({ method: "POST" })
 
     const { data: prof, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("balance,currency")
+      .select("balance,currency,verified")
       .eq("id", userId)
       .maybeSingle();
     if (pErr) throw new Error(pErr.message);
     if (!prof) throw new Error("Profile not found");
+    if (!prof.verified) throw new Error("Compte non vérifié — en attente de validation par l'administrateur");
+
 
     const balance = Number(prof.balance);
     const currency = prof.currency ?? "USD";

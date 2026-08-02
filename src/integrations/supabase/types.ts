@@ -155,6 +155,7 @@ export type Database = {
           status: string
           total_pl: number
           updated_at: string
+          verified: boolean
           withdrawals_blocked: boolean
         }
         Insert: {
@@ -168,6 +169,7 @@ export type Database = {
           status?: string
           total_pl?: number
           updated_at?: string
+          verified?: boolean
           withdrawals_blocked?: boolean
         }
         Update: {
@@ -181,6 +183,7 @@ export type Database = {
           status?: string
           total_pl?: number
           updated_at?: string
+          verified?: boolean
           withdrawals_blocked?: boolean
         }
         Relationships: []
