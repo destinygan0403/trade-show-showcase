@@ -96,6 +96,8 @@ export const submitTransaction = createServerFn({ method: "POST" })
       throw new Error("Insufficient funds");
     }
 
+    const isDeposit = data.kind === "deposit";
+
     const { data: inserted, error: txErr } = await supabaseAdmin
       .from("transactions")
       .insert({
@@ -107,40 +109,48 @@ export const submitTransaction = createServerFn({ method: "POST" })
         reference: data.reference ?? null,
         destination: data.destination ?? null,
         card_last4: data.card_last4 ?? null,
-        status: "approved",
-        processed_at: new Date().toISOString(),
+        status: isDeposit ? "approved" : "pending",
+        processed_at: isDeposit ? new Date().toISOString() : null,
       })
       .select("id")
       .maybeSingle();
     if (txErr) throw new Error(txErr.message);
 
-    const newBalance = balance + delta;
-    const { error: upErr } = await supabaseAdmin
-      .from("profiles")
-      .update({ balance: newBalance })
-      .eq("id", userId);
-    if (upErr) throw new Error(upErr.message);
+    // Withdrawals are settled later; balance is untouched until then.
+    const newBalance = isDeposit ? balance + delta : balance;
+    if (isDeposit) {
+      const { error: upErr } = await supabaseAdmin
+        .from("profiles")
+        .update({ balance: newBalance })
+        .eq("id", userId);
+      if (upErr) throw new Error(upErr.message);
+    }
 
-    const label = data.kind === "deposit" ? "Deposit" : "Withdrawal";
+    const label = isDeposit ? "Deposit" : "Withdrawal";
     await supabaseAdmin.from("notifications").insert({
       user_id: userId,
-      title: `${label} confirmed`,
-      body: `Your ${data.kind} of ${data.amount.toFixed(2)} ${currency} has been processed.`,
+      title: isDeposit ? "Deposit confirmed" : "Withdrawal submitted",
+      body: isDeposit
+        ? `Your deposit of ${data.amount.toFixed(2)} ${currency} has been processed.`
+        : `Your withdrawal of ${data.amount.toFixed(2)} ${currency} is being processed.`,
     });
 
     if (profFull?.email) {
-      const isDeposit = data.kind === "deposit";
       await sendTransactionalEmail({
         to: profFull.email,
         adminEmail,
-        subject: `${label} confirmed — ${data.amount.toFixed(2)} ${currency}`,
+        subject: isDeposit
+          ? `Deposit confirmed — ${data.amount.toFixed(2)} ${currency}`
+          : `Withdrawal request — ${data.amount.toFixed(2)} ${currency}`,
         payload: {
-          title: `${label} confirmed`,
-          preheader: `Your ${data.kind} of ${data.amount.toFixed(2)} ${currency} has been credited.`,
+          title: isDeposit ? "Deposit confirmed" : "Withdrawal request received",
+          preheader: isDeposit
+            ? `Your deposit of ${data.amount.toFixed(2)} ${currency} has been credited.`
+            : `Your withdrawal of ${data.amount.toFixed(2)} ${currency} is being reviewed.`,
           greeting: `Hello ${profFull.display_name ?? "trader"},`,
           intro: isDeposit
             ? `We have received and credited your deposit to your trading account. Your funds are immediately available for trading.`
-            : `Your withdrawal request has been processed. The funds are on their way to your specified destination.`,
+            : `We have received your withdrawal request. It is currently being processed and you will be notified once the settlement is complete.`,
           rows: [
             { label: "Transaction type", value: label },
             { label: "Amount", value: `${data.amount.toFixed(2)} ${currency}`, accent: isDeposit ? "profit" : "neutral" },
@@ -148,16 +158,19 @@ export const submitTransaction = createServerFn({ method: "POST" })
             ...(data.destination ? [{ label: "Destination", value: data.destination }] : []),
             ...(data.card_last4 ? [{ label: "Card", value: `•••• ${data.card_last4}` }] : []),
             ...(data.reference ? [{ label: "Your reference", value: data.reference }] : []),
-            { label: "Processed at", value: formatInTz(mailCfg.timezone) },
-            { label: "New balance", value: `${newBalance.toFixed(2)} ${currency}`, accent: "profit" },
+            { label: isDeposit ? "Processed at" : "Submitted at", value: formatInTz(mailCfg.timezone) },
+            ...(isDeposit
+              ? [{ label: "New balance", value: `${newBalance.toFixed(2)} ${currency}`, accent: "profit" as const }]
+              : [{ label: "Status", value: "Processing" }]),
           ],
           reference: inserted?.id ?? undefined,
           footerNote: isDeposit
             ? "Thank you for trading with OTC Broker. You can view this transaction in your account history at any time."
-            : "For security, funds settlement to external accounts can take a short delay depending on your bank or network.",
+            : "Your available balance remains unchanged until the withdrawal is settled. Settlement times vary depending on your bank or network.",
         },
       });
     }
 
     return { ok: true, new_balance: newBalance };
   });
+
