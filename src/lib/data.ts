@@ -191,6 +191,7 @@ export function useClosePosition() {
 }
 
 import { submitTransaction } from "./transactions.functions";
+import { adminSettleTransaction } from "./admin.functions";
 
 export function useRequestTransaction() {
   const qc = useQueryClient();
@@ -258,7 +259,6 @@ export function useAdminSettleTransaction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { tx: Transaction; approve: boolean; note?: string }) => {
-      const { adminSettleTransaction } = await import("./admin.functions");
       await adminSettleTransaction({ data: { id: input.tx.id, approve: input.approve, note: input.note } });
     },
     onSuccess: () => {
