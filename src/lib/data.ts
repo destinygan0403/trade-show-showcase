@@ -191,6 +191,7 @@ export function useClosePosition() {
 }
 
 import { submitTransaction } from "./transactions.functions";
+import { adminSettleTransaction } from "./admin.functions";
 
 export function useRequestTransaction() {
   const qc = useQueryClient();
@@ -258,35 +259,18 @@ export function useAdminSettleTransaction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { tx: Transaction; approve: boolean; note?: string }) => {
-      const status = input.approve ? "approved" : "rejected";
-      const { error } = await supabase
-        .from("transactions")
-        .update({ status, admin_note: input.note ?? null, processed_at: new Date().toISOString() })
-        .eq("id", input.tx.id);
-      if (error) throw error;
-
-      if (input.approve) {
-        const { data: prof } = await supabase.from("profiles").select("balance").eq("id", input.tx.user_id).maybeSingle();
-        if (prof) {
-          const delta = input.tx.kind === "deposit" ? Number(input.tx.amount) : -Number(input.tx.amount);
-          await supabase.from("profiles").update({ balance: Number(prof.balance) + delta }).eq("id", input.tx.user_id);
-        }
-      }
-
-      // Notify user
-      await supabase.from("notifications").insert({
-        user_id: input.tx.user_id,
-        title: `${input.tx.kind === "deposit" ? "Deposit" : "Withdrawal"} ${status}`,
-        body: `Your ${input.tx.kind} of ${input.tx.amount} ${input.tx.currency} was ${status}.`,
-      });
+      await adminSettleTransaction({ data: { id: input.tx.id, approve: input.approve, note: input.note } });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-tx"] });
       qc.invalidateQueries({ queryKey: ["tx"] });
       qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
+
 
 export function useAdminDeleteTransaction() {
   const qc = useQueryClient();

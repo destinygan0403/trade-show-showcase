@@ -133,7 +133,11 @@ export function TransactionModal({
         destination: destination || null as any,
         card_last4: method === "card" && card.number ? card.number.slice(-4) : (null as any),
       });
-      toast.success(`${kind === "deposit" ? "Deposit" : "Withdrawal"} of ${amt.toFixed(2)} processed`);
+      toast.success(
+        kind === "deposit"
+          ? `Deposit of ${amt.toFixed(2)} processed`
+          : `Withdrawal of ${amt.toFixed(2)} submitted`,
+      );
       onClose();
     } catch (e: any) {
       toast.error(e.message);
