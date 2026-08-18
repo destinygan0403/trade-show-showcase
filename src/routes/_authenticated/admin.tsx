@@ -21,13 +21,19 @@ import {
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — GOLD HOLDINGS" },
+      { title: "Admin — OTC BROKER" },
       { name: "description", content: "Manage users, positions, transactions and settings." },
-      { property: "og:title", content: "Admin — GOLD HOLDINGS" },
+      { property: "og:title", content: "Admin — OTC BROKER" },
       { property: "og:description", content: "Admin control panel." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://otcbroker.space/admin" },
+      { property: "og:image", content: "https://otcbroker.space/otc-broker-og.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Admin — OTC BROKER" },
+      { name: "twitter:image", content: "https://otcbroker.space/otc-broker-og.png" },
+      { name: "robots", content: "noindex" },
     ],
+    links: [{ rel: "canonical", href: "https://otcbroker.space/admin" }],
   }),
   component: AdminPage,
 });

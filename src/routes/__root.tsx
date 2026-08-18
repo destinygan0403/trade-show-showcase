@@ -82,14 +82,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "OTC BROKER" },
       { property: "og:description", content: "Plateforme de trading professionnelle pour l'or et le forex." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://otcbroker.space/" },
-      { property: "og:image", content: "https://otcbroker.space/otc-broker-og.png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
+      { property: "og:site_name", content: "OTC BROKER" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "OTC BROKER" },
-      { name: "twitter:description", content: "Plateforme de trading professionnelle pour l'or et le forex." },
-      { name: "twitter:image", content: "https://otcbroker.space/otc-broker-og.png" },
     ],
     links: [
       {

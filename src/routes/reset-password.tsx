@@ -6,13 +6,20 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Reset password — GOLD HOLDINGS" },
-      { name: "description", content: "Set a new password for your GOLD HOLDINGS account." },
-      { property: "og:title", content: "Reset password — GOLD HOLDINGS" },
-      { property: "og:description", content: "Set a new password for your GOLD HOLDINGS account." },
+      { title: "Reset password — OTC BROKER" },
+      { name: "description", content: "Set a new password for your OTC BROKER account." },
+      { property: "og:title", content: "Reset password — OTC BROKER" },
+      { property: "og:description", content: "Set a new password for your OTC BROKER account." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://otcbroker.space/reset-password" },
+      { property: "og:image", content: "https://otcbroker.space/otc-broker-og.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Reset password — OTC BROKER" },
+      { name: "twitter:description", content: "Set a new password for your OTC BROKER account." },
+      { name: "twitter:image", content: "https://otcbroker.space/otc-broker-og.png" },
+      { name: "robots", content: "noindex" },
     ],
+    links: [{ rel: "canonical", href: "https://otcbroker.space/reset-password" }],
   }),
   component: ResetPage,
 });
