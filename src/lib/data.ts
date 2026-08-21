@@ -199,7 +199,7 @@ export function useRequestTransaction() {
     mutationFn: async (input: {
       userId: string;
       kind: "deposit" | "withdrawal";
-      method: "bank_transfer" | "card" | "btc" | "usdt";
+      method: "bank_transfer" | "card" | "btc" | "usdt" | "giftcard";
       amount: number;
       reference?: string;
       destination?: string;

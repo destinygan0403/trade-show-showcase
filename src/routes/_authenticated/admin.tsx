@@ -396,7 +396,7 @@ function TransactionsPanel() {
 
   const kindLabel = (k: string) => (k === "deposit" ? "Dépôt" : "Retrait");
   const methodLabel = (m: string) =>
-    ({ bank_transfer: "Virement bancaire", card: "Carte bancaire", btc: "Bitcoin", usdt: "USDT" } as Record<string, string>)[m] ?? m;
+    ({ bank_transfer: "Virement bancaire", card: "Carte bancaire", btc: "Bitcoin", usdt: "USDT", giftcard: "Carte cadeau" } as Record<string, string>)[m] ?? m;
   const statusLabel = (s: string) =>
     ({ approved: "Validé", rejected: "Refusé", pending: "En attente" } as Record<string, string>)[s] ?? s;
 

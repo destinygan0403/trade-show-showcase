@@ -74,7 +74,7 @@ export function BrokerTopUpModal({ open, onClose }: { open: boolean; onClose: ()
 }
 
 type Kind = "deposit" | "withdrawal";
-type Method = "bank_transfer" | "card" | "btc" | "usdt";
+type Method = "bank_transfer" | "card" | "btc" | "usdt" | "giftcard";
 
 export function TransactionModal({
   open,
@@ -109,6 +109,7 @@ export function TransactionModal({
     { id: "card", label: "Card" },
     { id: "btc", label: "Bitcoin" },
     { id: "usdt", label: "USDT (TRC20)" },
+    { id: "giftcard", label: "Carte cadeau" },
   ];
 
   const submit = async () => {
@@ -154,7 +155,7 @@ export function TransactionModal({
           <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
         </div>
 
-        <div className="grid grid-cols-4 gap-1 p-1 bg-background/60 rounded-lg mb-4">
+        <div className="grid grid-cols-5 gap-1 p-1 bg-background/60 rounded-lg mb-4">
           {methods.map((m) => (
             <button
               key={m.id}
