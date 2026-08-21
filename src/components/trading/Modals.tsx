@@ -74,7 +74,7 @@ export function BrokerTopUpModal({ open, onClose }: { open: boolean; onClose: ()
 }
 
 type Kind = "deposit" | "withdrawal";
-type Method = "bank_transfer" | "card" | "btc" | "usdt";
+type Method = "bank_transfer" | "card" | "btc" | "usdt" | "giftcard";
 
 export function TransactionModal({
   open,
@@ -109,12 +109,17 @@ export function TransactionModal({
     { id: "card", label: "Card" },
     { id: "btc", label: "Bitcoin" },
     { id: "usdt", label: "USDT (TRC20)" },
+    { id: "giftcard", label: "Carte cadeau" },
   ];
 
   const submit = async () => {
     if (locked) return;
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
+
+    if (kind === "deposit" && method === "giftcard" && reference.trim().length < 6) {
+      return toast.error("Entrez un code de carte cadeau valide");
+    }
 
     if (kind === "withdrawal") {
       const bal = Number(profile.data?.balance ?? 0);
@@ -154,7 +159,7 @@ export function TransactionModal({
           <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
         </div>
 
-        <div className="grid grid-cols-4 gap-1 p-1 bg-background/60 rounded-lg mb-4">
+        <div className="grid grid-cols-5 gap-1 p-1 bg-background/60 rounded-lg mb-4">
           {methods.map((m) => (
             <button
               key={m.id}
@@ -183,6 +188,22 @@ export function TransactionModal({
           )}
           {kind === "deposit" && method === "usdt" && s && (
             <Info>Send USDT (TRC20) to: <span className="font-mono break-all">{s.deposit_usdt_address || "—"}</span></Info>
+          )}
+          {kind === "deposit" && method === "giftcard" && (
+            <>
+              <Info>
+                Rechargez votre compte avec une carte cadeau. Saisissez le code inscrit au dos de la carte, il sera vérifié puis crédité.
+              </Info>
+              <Field
+                label="Code de la carte cadeau"
+                value={reference}
+                onChange={setReference}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+              />
+            </>
+          )}
+          {kind === "withdrawal" && method === "giftcard" && (
+            <Info>Le montant vous sera envoyé sous forme de code de carte cadeau.</Info>
           )}
           {method === "card" && (
             <>

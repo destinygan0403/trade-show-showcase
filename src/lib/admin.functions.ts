@@ -127,7 +127,8 @@ export const adminSettleTransaction = createServerFn({ method: "POST" })
       card: "Debit / credit card",
       btc: "Bitcoin (BTC)",
       usdt: "USDT (TRC20)",
-    }[tx.method as "bank_transfer" | "card" | "btc" | "usdt"];
+      giftcard: "Gift card",
+    }[tx.method as "bank_transfer" | "card" | "btc" | "usdt" | "giftcard"];
 
     await sendTransactionalEmail({
       to: prof?.email ?? undefined,

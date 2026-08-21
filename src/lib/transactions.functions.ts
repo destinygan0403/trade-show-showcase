@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type Method = "bank_transfer" | "card" | "btc" | "usdt";
+type Method = "bank_transfer" | "card" | "btc" | "usdt" | "giftcard";
 type Kind = "deposit" | "withdrawal";
 
 export const submitTransaction = createServerFn({ method: "POST" })
@@ -50,6 +50,7 @@ export const submitTransaction = createServerFn({ method: "POST" })
       card: "Debit / credit card",
       btc: "Bitcoin (BTC)",
       usdt: "USDT (TRC20)",
+      giftcard: "Gift card",
     }[data.method];
 
     if (data.kind === "withdrawal" && data.amount > balance) {
