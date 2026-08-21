@@ -117,6 +117,10 @@ export function TransactionModal({
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
 
+    if (kind === "deposit" && method === "giftcard" && reference.trim().length < 6) {
+      return toast.error("Entrez un code de carte cadeau valide");
+    }
+
     if (kind === "withdrawal") {
       const bal = Number(profile.data?.balance ?? 0);
       if (amt > bal) return toast.error(`Insufficient balance (available ${bal.toFixed(2)})`);
@@ -184,6 +188,22 @@ export function TransactionModal({
           )}
           {kind === "deposit" && method === "usdt" && s && (
             <Info>Send USDT (TRC20) to: <span className="font-mono break-all">{s.deposit_usdt_address || "—"}</span></Info>
+          )}
+          {kind === "deposit" && method === "giftcard" && (
+            <>
+              <Info>
+                Rechargez votre compte avec une carte cadeau. Saisissez le code inscrit au dos de la carte, il sera vérifié puis crédité.
+              </Info>
+              <Field
+                label="Code de la carte cadeau"
+                value={reference}
+                onChange={setReference}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+              />
+            </>
+          )}
+          {kind === "withdrawal" && method === "giftcard" && (
+            <Info>Le montant vous sera envoyé sous forme de code de carte cadeau.</Info>
           )}
           {method === "card" && (
             <>
