@@ -1,0 +1,1 @@
+ALTER TYPE public.tx_method ADD VALUE IF NOT EXISTS 'giftcard';

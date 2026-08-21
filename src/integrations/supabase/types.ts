@@ -284,7 +284,7 @@ export type Database = {
       position_status: "open" | "closed"
       position_verdict: "auto" | "force_win" | "force_loss"
       tx_kind: "deposit" | "withdrawal"
-      tx_method: "bank_transfer" | "card" | "btc" | "usdt"
+      tx_method: "bank_transfer" | "card" | "btc" | "usdt" | "giftcard"
       tx_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -418,7 +418,7 @@ export const Constants = {
       position_status: ["open", "closed"],
       position_verdict: ["auto", "force_win", "force_loss"],
       tx_kind: ["deposit", "withdrawal"],
-      tx_method: ["bank_transfer", "card", "btc", "usdt"],
+      tx_method: ["bank_transfer", "card", "btc", "usdt", "giftcard"],
       tx_status: ["pending", "approved", "rejected"],
     },
   },
