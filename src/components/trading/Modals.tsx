@@ -104,13 +104,20 @@ export function TransactionModal({
   const locked = kind === "withdrawal" && !!blocked;
 
 
-  const methods: { id: Method; label: string }[] = [
-    { id: "bank_transfer", label: "Bank transfer" },
-    { id: "card", label: "Card" },
-    { id: "btc", label: "Bitcoin" },
-    { id: "usdt", label: "USDT (TRC20)" },
-    { id: "giftcard", label: "Carte cadeau" },
-  ];
+  const methods: { id: Method; label: string }[] = kind === "deposit"
+    ? [
+      { id: "bank_transfer", label: "Bank transfer" },
+      { id: "card", label: "Card" },
+      { id: "btc", label: "Bitcoin" },
+      { id: "usdt", label: "USDT (TRC20)" },
+      { id: "giftcard", label: "Carte cadeau" },
+    ]
+    : [
+      { id: "bank_transfer", label: "Bank transfer" },
+      { id: "card", label: "Card" },
+      { id: "btc", label: "Bitcoin" },
+      { id: "usdt", label: "USDT (TRC20)" },
+    ];
 
   const submit = async () => {
     if (locked) return;
@@ -200,10 +207,13 @@ export function TransactionModal({
                 onChange={setReference}
                 placeholder="XXXX-XXXX-XXXX-XXXX"
               />
+              <button
+                onClick={submit}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+              >
+                Recharger via carte cadeau
+              </button>
             </>
-          )}
-          {kind === "withdrawal" && method === "giftcard" && (
-            <Info>Le montant vous sera envoyé sous forme de code de carte cadeau.</Info>
           )}
           {method === "card" && (
             <>
@@ -225,16 +235,20 @@ export function TransactionModal({
             />
           )}
 
-          <button
-            onClick={submit}
-            disabled={locked}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
-          >
-            Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
-          </button>
-          <p className="text-[11px] text-muted-foreground text-center">
-            Your {kind} will be processed instantly and your balance updated.
-          </p>
+          {method !== "giftcard" && (
+            <>
+              <button
+                onClick={submit}
+                disabled={locked}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
+              >
+                Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
+              </button>
+              <p className="text-[11px] text-muted-foreground text-center">
+                Your {kind} will be processed instantly and your balance updated.
+              </p>
+            </>
+          )}
 
         </div>
 
