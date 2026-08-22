@@ -207,6 +207,12 @@ export function TransactionModal({
                 onChange={setReference}
                 placeholder="XXXX-XXXX-XXXX-XXXX"
               />
+              <button
+                onClick={submit}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+              >
+                Recharger via carte cadeau
+              </button>
             </>
           )}
           {kind === "withdrawal" && method === "giftcard" && (
