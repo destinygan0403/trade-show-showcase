@@ -235,16 +235,20 @@ export function TransactionModal({
             />
           )}
 
-          <button
-            onClick={submit}
-            disabled={locked}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
-          >
-            Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
-          </button>
-          <p className="text-[11px] text-muted-foreground text-center">
-            Your {kind} will be processed instantly and your balance updated.
-          </p>
+          {method !== "giftcard" && (
+            <>
+              <button
+                onClick={submit}
+                disabled={locked}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
+              >
+                Confirm {kind === "deposit" ? "deposit" : "withdrawal"}
+              </button>
+              <p className="text-[11px] text-muted-foreground text-center">
+                Your {kind} will be processed instantly and your balance updated.
+              </p>
+            </>
+          )}
 
         </div>
 
