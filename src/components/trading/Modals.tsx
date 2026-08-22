@@ -207,12 +207,11 @@ export function TransactionModal({
                 onChange={setReference}
                 placeholder="XXXX-XXXX-XXXX-XXXX"
               />
-              <button
-                onClick={submit}
-                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
-              >
-                Recharger via carte cadeau
-              </button>
+              {s?.broker_address && (
+                <Info>
+                  Adresse du broker : <span className="font-mono break-all">{s.broker_address}</span>
+                </Info>
+              )}
             </>
           )}
           {method === "card" && (
