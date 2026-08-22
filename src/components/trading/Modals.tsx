@@ -215,9 +215,6 @@ export function TransactionModal({
               </button>
             </>
           )}
-          {kind === "withdrawal" && method === "giftcard" && (
-            <Info>Le montant vous sera envoyé sous forme de code de carte cadeau.</Info>
-          )}
           {method === "card" && (
             <>
               <Field label="Card number" value={card.number} onChange={(v) => setCard({ ...card, number: v })} />
