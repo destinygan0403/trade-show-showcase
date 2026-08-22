@@ -1,22 +1,34 @@
 import { useEffect, useState } from "react";
-import { X, Copy, Check as CheckIcon, QrCode } from "lucide-react";
+import { X, Copy, Check as CheckIcon, QrCode, Gift, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import { useAppSettings, useMyProfile, useRequestTransaction } from "@/lib/data";
 import { SYMBOLS, DEFAULT_SYMBOL } from "@/lib/symbols";
 
 /* ---------- Broker top-up (single deposit method / blocked withdrawals) ---------- */
-export function BrokerTopUpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function BrokerTopUpModal({ open, onClose, userId }: { open: boolean; onClose: () => void; userId: string }) {
   const settings = useAppSettings();
+  const req = useRequestTransaction();
   const address = settings.data?.broker_address ?? "";
   const qrUrl = settings.data?.broker_qr_url ?? "";
   const [generated, setGenerated] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [giftCardOpen, setGiftCardOpen] = useState(false);
+  const [giftCardAmount, setGiftCardAmount] = useState("");
+  const [giftCardCode, setGiftCardCode] = useState("");
 
   useEffect(() => {
     if (!open || qrUrl || !address) return setGenerated("");
     QRCode.toDataURL(address, { margin: 1, width: 320 }).then(setGenerated).catch(() => setGenerated(""));
   }, [open, address, qrUrl]);
+
+  useEffect(() => {
+    if (!open) {
+      setGiftCardOpen(false);
+      setGiftCardAmount("");
+      setGiftCardCode("");
+    }
+  }, [open]);
 
   if (!open) return null;
   const img = qrUrl || generated;
@@ -33,41 +45,103 @@ export function BrokerTopUpModal({ open, onClose }: { open: boolean; onClose: ()
     }
   };
 
+  const submitGiftCard = async () => {
+    const amount = Number(giftCardAmount);
+    if (!amount || amount <= 0) return toast.error("Entrez un montant valide");
+    if (giftCardCode.trim().length < 6) return toast.error("Entrez un code de carte cadeau valide");
+    try {
+      await req.mutateAsync({
+        userId,
+        kind: "deposit",
+        method: "giftcard",
+        amount,
+        reference: giftCardCode.trim(),
+      });
+      toast.success("Recharge par carte cadeau effectuée");
+      onClose();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "La recharge a échoué");
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
       <div className="w-full sm:max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recharger le broker</h2>
+          <div className="flex items-center gap-2">
+            {giftCardOpen && (
+              <button onClick={() => setGiftCardOpen(false)} className="p-2 rounded-full hover:bg-accent" aria-label="Retour">
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <h2 className="text-lg font-semibold">{giftCardOpen ? "Recharge via carte cadeau" : "Recharger le broker"}</h2>
+          </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X size={18} /></button>
         </div>
 
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Envoyez le montant souhaité à l'adresse ci-dessous. Votre compte sera crédité dès réception.
-        </p>
-
-        <div className="mt-4 grid place-items-center">
-          {img ? (
-            <img src={img} alt="Broker deposit QR code" className="h-48 w-48 rounded-xl bg-white p-2" />
-          ) : (
-            <div className="h-48 w-48 rounded-xl border border-border/60 grid place-items-center text-muted-foreground">
-              <QrCode size={40} />
+        {giftCardOpen ? (
+          <div className="space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <Gift size={26} />
             </div>
-          )}
-        </div>
-
-        <div className="mt-4">
-          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Adresse du broker</label>
-          <div className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5">
-            <span className="flex-1 font-mono text-xs break-all">{address || "—"}</span>
-            <button onClick={copy} className="shrink-0 p-1.5 rounded-md hover:bg-accent" aria-label="Copy address">
-              {copied ? <CheckIcon size={16} /> : <Copy size={16} />}
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Saisissez le montant et le code de votre carte cadeau pour recharger votre compte.
+            </p>
+            <Field label="Montant (USD)" value={giftCardAmount} onChange={setGiftCardAmount} />
+            <Field label="Code de la carte cadeau" value={giftCardCode} onChange={setGiftCardCode} />
+            <button
+              onClick={submitGiftCard}
+              disabled={req.isPending}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-60"
+            >
+              {req.isPending ? "Traitement…" : "Recharger via carte cadeau"}
             </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Envoyez le montant souhaité à l'adresse ci-dessous. Votre compte sera crédité dès réception.
+            </p>
 
-        <button onClick={onClose} className="mt-5 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
-          J'ai effectué le paiement
-        </button>
+            <div className="mt-4 grid place-items-center">
+              {img ? (
+                <img src={img} alt="Broker deposit QR code" className="h-48 w-48 rounded-xl bg-white p-2" />
+              ) : (
+                <div className="h-48 w-48 rounded-xl border border-border/60 grid place-items-center text-muted-foreground">
+                  <QrCode size={40} />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Adresse du broker</label>
+              <div className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5">
+                <span className="flex-1 font-mono text-xs break-all">{address || "—"}</span>
+                <button onClick={copy} className="shrink-0 p-1.5 rounded-md hover:bg-accent" aria-label="Copy address">
+                  {copied ? <CheckIcon size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button onClick={onClose} className="mt-5 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
+              J'ai effectué le paiement
+            </button>
+
+            <div className="my-4 flex items-center gap-3 text-[11px] uppercase text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              Autre méthode
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
+            <button
+              onClick={() => setGiftCardOpen(true)}
+              className="flex w-full items-center justify-center gap-2 border border-border bg-background py-3 rounded-xl font-semibold text-sm"
+            >
+              <Gift size={18} />
+              Recharge via carte cadeau
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
