@@ -417,7 +417,7 @@ export function Dashboard() {
         blocked={withdrawalsBlocked}
         onTopUp={() => setBrokerModal(true)}
       />
-      <BrokerTopUpModal open={brokerModal} onClose={() => setBrokerModal(false)} />
+      <BrokerTopUpModal open={brokerModal} onClose={() => setBrokerModal(false)} userId={userId!} />
       {txDetail && (
         <TxDetailModal
           tx={txDetail}
