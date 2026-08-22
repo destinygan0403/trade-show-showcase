@@ -248,6 +248,14 @@ export function TransactionModal({
               </p>
             </>
           )}
+          {kind === "deposit" && method === "giftcard" && (
+            <button
+              onClick={submit}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+            >
+              Recharger via carte cadeau
+            </button>
+          )}
 
         </div>
 
