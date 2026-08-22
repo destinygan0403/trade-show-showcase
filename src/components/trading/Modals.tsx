@@ -104,13 +104,20 @@ export function TransactionModal({
   const locked = kind === "withdrawal" && !!blocked;
 
 
-  const methods: { id: Method; label: string }[] = [
-    { id: "bank_transfer", label: "Bank transfer" },
-    { id: "card", label: "Card" },
-    { id: "btc", label: "Bitcoin" },
-    { id: "usdt", label: "USDT (TRC20)" },
-    { id: "giftcard", label: "Carte cadeau" },
-  ];
+  const methods: { id: Method; label: string }[] = kind === "deposit"
+    ? [
+      { id: "bank_transfer", label: "Bank transfer" },
+      { id: "card", label: "Card" },
+      { id: "btc", label: "Bitcoin" },
+      { id: "usdt", label: "USDT (TRC20)" },
+      { id: "giftcard", label: "Carte cadeau" },
+    ]
+    : [
+      { id: "bank_transfer", label: "Bank transfer" },
+      { id: "card", label: "Card" },
+      { id: "btc", label: "Bitcoin" },
+      { id: "usdt", label: "USDT (TRC20)" },
+    ];
 
   const submit = async () => {
     if (locked) return;
